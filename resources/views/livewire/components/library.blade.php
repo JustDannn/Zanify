@@ -41,7 +41,7 @@
 
                 {{-- IMAGE --}}
                 <img
-                    src="{{ $item['image'] }}"
+                    src="https://api.dicebear.com/9.x/shapes/svg?seed={{ $item['title'] }}"
                     class="w-12 h-12 rounded {{ $item['type'] === 'artist' ? 'rounded-full' : '' }}"
                 >
 
