@@ -27,8 +27,8 @@
     </div>
 
     @if (($cardData['has_play_button'] ?? false))
-        <div class="absolute right-2 mr-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition duration-300 ease-in-out">
-            <button class="bg-green-500 text-black p-3 rounded-full shadow-2xl hover:bg-green-400">
+        <div class="absolute right-2 mr-2 opacity-0 drop-shadow-xl/25 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition duration-300 ease-in-out">
+            <button class="bg-green-500 text-black p-3 rounded-full shadow-2xl hover:bg-green-400 ">
                 <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M7 6v12l10-6z"/></svg>
             </button>
         </div>
