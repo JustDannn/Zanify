@@ -23,7 +23,8 @@
                     <button class="px-4 py-1.5 text-amber-50 bg-white/10 bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 rounded-full text-sm hover:bg-amber-50/35">Podcasts</button>
                 </div>
             </div>
-            @livewire('card-group') 
+            @livewire('card-group')
+            @livewire('components.mix-section') 
         </div>
     </div>
 
