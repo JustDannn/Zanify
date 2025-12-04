@@ -1,3 +1,13 @@
+<style>
+    .hidden-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .hidden-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+</style>
+
 <div class="p-6">
     
     {{-- HEADER SECTION --}}
@@ -7,10 +17,13 @@
     </div>
 
     {{-- HORIZONTAL SCROLL CONTAINER --}}
-    <div class="flex space-x-6 pb-4 overflow-x-auto scrollbar-hide">
+    <div class="flex space-x-6 pb-4 overflow-x-auto hidden-scrollbar">
         {{-- Loop data dan panggil komponen Card --}}
         @foreach ($mixes as $mix)
-            @livewire('cards.card', ['cardData' => $mix], key($mix['id']))
+            <div class="flex-shrink-0 w-[200px]">
+    @livewire('cards.card', ['cardData' => $mix], key($mix['id']))
+</div>
+
         @endforeach
     </div>
 

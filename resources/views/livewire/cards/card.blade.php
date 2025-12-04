@@ -11,7 +11,7 @@
     {{-- IMAGE CONTAINER --}}
     <div class="relative w-full aspect-square mb-3 overflow-hidden rounded-lg shadow-xl">
         {{-- Main Image --}}
-        <img class="w-full h-full object-cover" src="{{ $image }}" alt="{{ $title }}">
+        <img class="w-full h-full object-cover" src="{{ $image }}">
 
         {{-- Play Button (Muncul saat hover) --}}
         <div class="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition duration-300 ease-in-out">
@@ -32,6 +32,6 @@
     </div>
 
     {{-- TITLE AND DESCRIPTION --}}
-    <p class="text-white font-semibold text-base truncate">{{ $title }}</p>
+    {{-- <p class="text-white font-semibold text-base truncate">{{ $title }}</p> --}}
     <p class="text-gray-400 text-sm truncate">Daily Mix</p>
 </div>

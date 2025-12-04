@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'admin_key',
     ];
 
     /**
@@ -45,6 +46,14 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->admin_key === config('app.admin_key') && !empty($this->admin_key) && config('app.admin_key');
     }
 
     /**

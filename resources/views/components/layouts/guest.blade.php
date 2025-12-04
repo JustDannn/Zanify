@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title>{{ $title ?? 'Page Title' }}</title>
+        <title>{{ $title ?? 'Zanify' }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
         <style>
@@ -24,13 +24,9 @@
         </style>
     </head>
     <body>
-        @livewire('components.navbar')
-        <div class="h-screen flex">
-            @livewire('components.library')
-            <main class="flex-1 overflow-y-auto">
-                {{ $slot }}
-            </main>
-        </div>
+        <main>
+            {{ $slot }}
+        </main>
     @livewireScripts    
     </body>
 </html>

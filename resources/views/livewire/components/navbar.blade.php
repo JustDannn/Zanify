@@ -95,7 +95,17 @@
     >
         <a class="block px-4 py-2 hover:bg-gray-800 transition">Profile</a>
         <a class="block px-4 py-2 hover:bg-gray-800 transition">Settings</a>
-        <a class="block px-4 py-2 hover:bg-gray-800 transition text-red-400">Logout</a>
+        @if($isAdmin)
+            <div class="border-t border-gray-700"></div>
+            <a class="block px-4 py-2 hover:bg-gray-800 transition text-blue-400 font-semibold">Admin Dashboard</a>
+        @endif
+        <div class="border-t border-gray-700"></div>
+        <form method="POST" action="{{ route('logout') }}" class="m-0">
+            @csrf
+            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-800 transition text-red-400 font-semibold">
+                Logout
+            </button>
+        </form>
     </div>
 </div>
 
