@@ -7,7 +7,6 @@ use App\DataStructures\Node;
 /**
  * Implementasi BAB III - Poin 3.1: Struktur Data Utama (Library Lagu)
  * Jenis: Doubly Linked List (DLL)
- * Fitur: Traversal dua arah (Maju/Mundur), Insert, Delete efisien.
  */
 class DoublyLinkedList
 {
@@ -22,9 +21,6 @@ class DoublyLinkedList
         $this->count = 0;
     }
 
-    /**
-     * Menambah lagu ke Library (Insert Last)
-     */
     public function addSong($data)
     {
         $newNode = new Node($data);
@@ -33,68 +29,17 @@ class DoublyLinkedList
             $this->head = $newNode;
             $this->tail = $newNode;
         } else {
-            $this->tail->next = $newNode; // Tail lama -> Next -> Node Baru
-            $newNode->prev = $this->tail; // Node Baru -> Prev -> Tail lama
-            $this->tail = $newNode;       // Pindahkan Tail ke Node Baru
+            $this->tail->next = $newNode;
+            $newNode->prev = $this->tail;
+            $this->tail = $newNode;
         }
         $this->count++;
     }
 
-    /**
-     * Hapus Lagu dari DLL berdasarkan ID Lagu (CRUD: Delete)
-     * Logika: Mencari node dan memutus sambungan prev/next.
-     */
-    public function deleteSongById($id)
-    {
-        $current = $this->head;
-        while ($current !== null) {
-            if ($current->data['id'] === $id) {
-                // Kasus 1: Node adalah Head
-                if ($current === $this->head) {
-                    $this->head = $current->next;
-                    if ($this->head !== null) {
-                        $this->head->prev = null;
-                    }
-                }
-                // Kasus 2: Node adalah Tail
-                elseif ($current === $this->tail) {
-                    $this->tail = $current->prev;
-                    $this->tail->next = null;
-                }
-                // Kasus 3: Node di Tengah
-                else {
-                    $current->prev->next = $current->next;
-                    $current->next->prev = $current->prev;
-                }
-                
-                $this->count--;
-                // Penting: Memastikan Node tidak lagi di memori (optional)
-                $current->next = null; 
-                $current->prev = null;
-
-                return true;
-            }
-            $current = $current->next;
-        }
-        return false; // ID tidak ditemukan
-    }
+    // --- FITUR BARU: FIND & UPDATE ---
 
     /**
-     * Menampilkan semua lagu (Traversal Maju)
-     */
-    public function getAllSongs()
-    {
-        $songs = [];
-        $current = $this->head;
-        while ($current !== null) {
-            $songs[] = $current->data;
-            $current = $current->next;
-        }
-        return $songs;
-    }
-
-    /**
-     * Mencari Node berdasarkan ID (Berguna untuk Sinkronisasi)
+     * Mencari Node berdasarkan ID
      */
     public function findSongById($id)
     {
@@ -106,5 +51,64 @@ class DoublyLinkedList
             $current = $current->next;
         }
         return null;
+    }
+
+    /**
+     * Update data lagu berdasarkan ID
+     */
+    public function updateSong($id, $newData)
+    {
+        $current = $this->head;
+        while ($current !== null) {
+            if ($current->data['id'] === $id) {
+                // Gabungkan data lama dengan data baru (agar ID dan Audio URL aman jika tidak diubah)
+                // array_merge menimpa data lama dengan data baru yang memiliki key sama
+                $current->data = array_merge($current->data, $newData);
+                return true;
+            }
+            $current = $current->next;
+        }
+        return false;
+    }
+
+    // ---------------------------------
+
+    public function deleteSongById($id)
+    {
+        $current = $this->head;
+        while ($current !== null) {
+            if ($current->data['id'] === $id) {
+                if ($current === $this->head) {
+                    $this->head = $current->next;
+                    if ($this->head !== null) {
+                        $this->head->prev = null;
+                    }
+                } elseif ($current === $this->tail) {
+                    $this->tail = $current->prev;
+                    $this->tail->next = null;
+                } else {
+                    $current->prev->next = $current->next;
+                    $current->next->prev = $current->prev;
+                }
+                
+                $this->count--;
+                $current->next = null; 
+                $current->prev = null;
+                return true;
+            }
+            $current = $current->next;
+        }
+        return false;
+    }
+
+    public function getAllSongs()
+    {
+        $songs = [];
+        $current = $this->head;
+        while ($current !== null) {
+            $songs[] = $current->data;
+            $current = $current->next;
+        }
+        return $songs;
     }
 }

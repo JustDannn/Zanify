@@ -8,6 +8,7 @@ use App\DataStructures\Node;
  * Implementasi BAB III - Poin 3.2: Struktur Data Playlist
  * Jenis: Circular Doubly Linked List (CDLL)
  * Fitur: Next/Prev tanpa henti (Looping).
+ * PENTING: Node hanya menyimpan ID Lagu (Simulasi Pointer/Sinkronisasi)
  */
 class CircularDoublyLinkedList
 {
@@ -22,24 +23,24 @@ class CircularDoublyLinkedList
 
     /**
      * Menambah lagu ke Playlist User
-     * Konsep: Insert Last pada Circular DLL
+     * Menerima array dengan format: ['id' => 'song_id']
      */
     public function addSong($data)
     {
-        $newNode = new Node($data);
+        // Pastikan kita hanya menyimpan ID
+        $dataToStore = ['id' => $data['id']];
+        $newNode = new Node($dataToStore);
 
         if ($this->head === null) {
             $this->head = $newNode;
-            $newNode->next = $newNode; // Menunjuk ke diri sendiri (Circular)
-            $newNode->prev = $newNode; // Menunjuk ke diri sendiri (Circular)
+            $newNode->next = $newNode; 
+            $newNode->prev = $newNode; 
         } else {
-            $last = $this->head->prev; // Node sebelum head adalah node terakhir
+            $last = $this->head->prev; 
 
-            // Sambungkan Node terakhir ke Node Baru
             $last->next = $newNode;
             $newNode->prev = $last;
 
-            // Sambungkan Node Baru ke Head (Looping)
             $newNode->next = $this->head;
             $this->head->prev = $newNode;
         }
@@ -47,8 +48,44 @@ class CircularDoublyLinkedList
     }
 
     /**
-     * Mengambil semua lagu untuk ditampilkan di Frontend
-     * Perlu hati-hati agar loop tidak infinite saat mengambil data
+     * Hapus Lagu dari Playlist CDLL berdasarkan ID Lagu (Wajib untuk Sinkronisasi)
+     * INI ADALAH FUNGSI YANG HILANG DAN MENYEBABKAN ERROR 500
+     */
+    public function deleteSongById($id)
+    {
+        if ($this->head === null) {
+            return false;
+        }
+        
+        $current = $this->head;
+        $deleted = false;
+
+        do {
+            if ($current->data['id'] === $id) {
+                // Kasus 1: Hanya ada 1 Node
+                if ($current->next === $current) {
+                    $this->head = null;
+                } 
+                // Kasus 2: Node yang dihapus adalah Head
+                else {
+                    $current->prev->next = $current->next;
+                    $current->next->prev = $current->prev;
+                    if ($current === $this->head) {
+                        $this->head = $current->next; // Geser Head
+                    }
+                }
+                $this->count--;
+                $deleted = true;
+                break; // Keluar dari loop setelah menghapus
+            }
+            $current = $current->next;
+        } while ($current !== $this->head); // Loop sampai kembali ke Head
+
+        return $deleted;
+    }
+
+    /**
+     * Mengambil semua ID lagu untuk sinkronisasi di Controller
      */
     public function getAllSongs()
     {
@@ -57,9 +94,8 @@ class CircularDoublyLinkedList
         $songs = [];
         $current = $this->head;
 
-        // Loop menggunakan do-while agar jalan minimal sekali
         do {
-            $songs[] = $current->data;
+            $songs[] = $current->data; 
             $current = $current->next;
         } while ($current !== $this->head);
 
