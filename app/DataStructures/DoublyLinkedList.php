@@ -41,8 +41,46 @@ class DoublyLinkedList
     }
 
     /**
+     * Hapus Lagu dari DLL berdasarkan ID Lagu (CRUD: Delete)
+     * Logika: Mencari node dan memutus sambungan prev/next.
+     */
+    public function deleteSongById($id)
+    {
+        $current = $this->head;
+        while ($current !== null) {
+            if ($current->data['id'] === $id) {
+                // Kasus 1: Node adalah Head
+                if ($current === $this->head) {
+                    $this->head = $current->next;
+                    if ($this->head !== null) {
+                        $this->head->prev = null;
+                    }
+                }
+                // Kasus 2: Node adalah Tail
+                elseif ($current === $this->tail) {
+                    $this->tail = $current->prev;
+                    $this->tail->next = null;
+                }
+                // Kasus 3: Node di Tengah
+                else {
+                    $current->prev->next = $current->next;
+                    $current->next->prev = $current->prev;
+                }
+                
+                $this->count--;
+                // Penting: Memastikan Node tidak lagi di memori (optional)
+                $current->next = null; 
+                $current->prev = null;
+
+                return true;
+            }
+            $current = $current->next;
+        }
+        return false; // ID tidak ditemukan
+    }
+
+    /**
      * Menampilkan semua lagu (Traversal Maju)
-     * Digunakan Admin untuk melihat Library.
      */
     public function getAllSongs()
     {
@@ -56,27 +94,17 @@ class DoublyLinkedList
     }
 
     /**
-     * Mencari Lagu Mirip Berdasarkan Genre (Logic Poin 3.3)
-     * Algoritma: Linear Search pada DLL
+     * Mencari Node berdasarkan ID (Berguna untuk Sinkronisasi)
      */
-    public function findSimilarSongs($genre, $excludeTitle = null)
+    public function findSongById($id)
     {
-        $similarSongs = [];
         $current = $this->head;
-        
         while ($current !== null) {
-            // Cek jika genrenya sama DAN bukan lagu yang sedang diputar
-            if (
-                isset($current->data['genre']) && 
-                $current->data['genre'] === $genre &&
-                $current->data['title'] !== $excludeTitle
-            ) {
-                $similarSongs[] = $current->data;
+            if ($current->data['id'] === $id) {
+                return $current->data;
             }
             $current = $current->next;
         }
-
-        // Jika tidak ada yang mirip, kembalikan null atau array kosong
-        return $similarSongs;
+        return null;
     }
-}DoublyLinkedList.php
+}

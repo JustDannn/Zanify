@@ -3,132 +3,172 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// GANTI: Gunakan Circular Doubly Linked List untuk Playlist User
 use App\DataStructures\CircularDoublyLinkedList; 
+use App\DataStructures\DoublyLinkedList;
 use App\DataStructures\Stack; 
 use App\DataStructures\Queue;
 
 class PlaylistController extends Controller
 {
+    // --- HELPER FUNCTIONS ---
+
     /**
-     * Menampilkan Halaman Web Playlist (Frontend)
-     * URL: /playlist
+     * Helper: Memuat Struktur Data dari Session (DENGAN PENANGANAN ERROR UNPARSE)
      */
+    private function loadStructure(Request $request, $key, $defaultObject)
+    {
+        if ($request->session()->has($key)) {
+            $serialized = $request->session()->get($key);
+            
+            // PENTING: Coba unserialize. Jika gagal, kembalikan objek baru (kosong).
+            try {
+                 // Tambahkan parameter allowed_classes=true untuk mengatasi masalah unserialize modern
+                 $unserializedObject = unserialize($serialized, ['allowed_classes' => true]);
+
+                 // Cek jika hasil unserialize valid dan sesuai tipe
+                 if ($unserializedObject instanceof $defaultObject) {
+                    return $unserializedObject;
+                 } else {
+                    // Jika tipe objek tidak cocok (misal, struktur lama), buang dan mulai baru
+                    return $defaultObject;
+                 }
+            } catch (\Exception $e) {
+                 // Jika terjadi error saat unserialize, kembalikan objek default (kosong)
+                 return $defaultObject;
+            }
+        }
+        return $defaultObject;
+    }
+
+    private function findSongInLibrary(DoublyLinkedList $library, $songId) {
+        $current = $library->head;
+        while ($current !== null) {
+            if (isset($current->data['id']) && $current->data['id'] === $songId) {
+                return $current->data;
+            }
+            $current = $current->next;
+        }
+        return null;
+    }
+    
+    // -------------------------
+
     public function index(Request $request)
     {
-        // 1. Load Struktur Data dari Session
-        // PERUBAHAN: Default object sekarang adalah CircularDoublyLinkedList
-        $playlist = $this->loadFromSession($request, 'my_playlist', new CircularDoublyLinkedList());
-        $history  = $this->loadFromSession($request, 'my_history', new Stack());
-        $queue    = $this->loadFromSession($request, 'my_queue', new Queue());
+        $library  = $this->loadStructure($request, 'library', new DoublyLinkedList());
+        $playlist = $this->loadStructure($request, 'my_playlist', new CircularDoublyLinkedList());
+        $history  = $this->loadStructure($request, 'my_history', new Stack());
+        $queue    = $this->loadStructure($request, 'my_queue', new Queue());
+        
+        $songs = [];
+        foreach ($playlist->getAllSongs() as $playlistSong) {
+            if (isset($playlistSong['id'])) {
+                $songDetails = $this->findSongInLibrary($library, $playlistSong['id']);
+                if ($songDetails) {
+                    $songs[] = $songDetails;
+                }
+            }
+        }
 
-        // 2. Ambil data array untuk dikirim ke View
-        $songs = $playlist->getAllSongs();
-        $historySongs = $history->getHistory(); 
-        $queueSongs = $queue->getQueue();      
-
-        // 3. Return View
         return view('playlist', [
             'songs'   => $songs,
-            'history' => $historySongs,
-            'queue'   => $queueSongs,  
-            'total'   => $playlist->count
+            'history' => $history->getHistory(),
+            'queue'   => $queue->getQueue(),
+            'total'   => count($songs)
         ]);
     }
-
-    /**
-     * Menambah Lagu Baru ke Playlist (Circular DLL)
-     * URL: /playlist/add
-     */
+    
     public function addSong(Request $request)
     {
-        // Load sebagai CircularDoublyLinkedList
-        $playlist = $this->loadFromSession($request, 'my_playlist', new CircularDoublyLinkedList());
-        
-        $newSong = $this->generateRandomSong();
+        $library = $this->loadStructure($request, 'library', new DoublyLinkedList());
+        $playlist = $this->loadStructure($request, 'my_playlist', new CircularDoublyLinkedList());
 
-        // Masukkan ke Playlist (Circular Logic sudah ada di class-nya)
-        $playlist->addSong($newSong);
+        $librarySongs = $library->getAllSongs();
+        if (empty($librarySongs)) {
+             return response()->json(['status' => 'error', 'message' => 'Library Admin kosong.']);
+        }
+
+        $randomSong = $librarySongs[array_rand($librarySongs)];
+        $playlist->addSong(['id' => $randomSong['id']]); 
         
-        // Simpan state terbaru
         $request->session()->put('my_playlist', serialize($playlist));
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Lagu ditambahkan ke Playlist (Circular DLL)!',
-            'data' => $newSong
-        ]);
+        return response()->json(['status' => 'success', 'message' => 'Lagu ditambahkan ke Playlist!', 'data' => $randomSong]);
     }
 
-    /**
-     * Menambah Lagu ke Antrian Next Up (Queue - FIFO)
-     * URL: /playlist/queue
-     */
     public function addToQueue(Request $request)
     {
-        $queue = $this->loadFromSession($request, 'my_queue', new Queue());
+        $library = $this->loadStructure($request, 'library', new DoublyLinkedList());
+        $queue = $this->loadStructure($request, 'my_queue', new Queue());
         
-        $newSong = $this->generateRandomSong();
-        $newSong['source'] = 'Queue Request';
+        $librarySongs = $library->getAllSongs();
+        if (empty($librarySongs)) {
+             return response()->json(['status' => 'error', 'message' => 'Library Admin kosong.']);
+        }
+        
+        $randomSong = $librarySongs[array_rand($librarySongs)];
 
-        $queue->enqueue($newSong);
+        $queue->enqueue($randomSong);
 
+        $request->session()->put('my_queue', serialize($queue));
+
+        return response()->json(['status' => 'success', 'message' => 'Lagu masuk antrian (Queue)!', 'data' => $randomSong]);
+    }
+    
+    /**
+     * FUNGSI: Clear Queue (Mengosongkan Antrian)
+     */
+    public function clearQueue(Request $request)
+    {
+        $queue = $this->loadStructure($request, 'my_queue', new Queue());
+        $queue->clear();
+        
         $request->session()->put('my_queue', serialize($queue));
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Lagu masuk antrian (Queue)!',
-            'data' => $newSong
+            'message' => 'Antrian berhasil dikosongkan.',
         ]);
     }
 
     /**
-     * Simulasi Memutar Lagu (Masuk History Stack)
-     * URL: /playlist/play
+     * FUNGSI: Pindahkan Item di Queue (Reordering)
      */
+    public function moveQueueItem(Request $request)
+    {
+        $index = (int)$request->input('index');
+        $direction = $request->input('direction');
+
+        $queue = $this->loadStructure($request, 'my_queue', new Queue());
+        
+        $isMoved = $queue->moveItem($index, $direction);
+
+        if ($isMoved) {
+            $request->session()->put('my_queue', serialize($queue));
+            return response()->json(['status' => 'success', 'message' => 'Urutan lagu berhasil diubah.']);
+        } else {
+            return response()->json(['status' => 'error', 'message' => 'Gagal memindahkan lagu. (Index tidak valid).']);
+        }
+    }
+
+
     public function playSong(Request $request)
     {
-        $history = $this->loadFromSession($request, 'my_history', new Stack());
+        $library = $this->loadStructure($request, 'library', new DoublyLinkedList());
+        $history = $this->loadStructure($request, 'my_history', new Stack());
 
-        $playedSong = $this->generateRandomSong();
+        $librarySongs = $library->getAllSongs();
+        if (empty($librarySongs)) {
+             return response()->json(['status' => 'error', 'message' => 'Library Admin kosong.']);
+        }
+        
+        $playedSong = $librarySongs[array_rand($librarySongs)];
         $playedSong['played_at'] = date('H:i');
 
         $history->push($playedSong);
 
         $request->session()->put('my_history', serialize($history));
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Lagu diputar & masuk History (Stack)!',
-            'data' => $playedSong
-        ]);
-    }
-
-    // --- HELPER FUNCTIONS ---
-
-    private function loadFromSession(Request $request, $key, $defaultObject)
-    {
-        if ($request->session()->has($key)) {
-            // Unserialize mengubah string kembali menjadi Object
-            // Pastikan class CircularDoublyLinkedList sudah ada di namespace yang benar
-            return unserialize($request->session()->get($key));
-        }
-        return $defaultObject;
-    }
-
-    private function generateRandomSong()
-    {
-        $artists = ['Tulus', 'Coldplay', 'Arctic Monkeys', 'Nadin Amizah', 'Bruno Mars', 'Sheila On 7', 'Bernadya', 'Payung Teduh'];
-        $titles = ['Hati-Hati di Jalan', 'Yellow', 'Do I Wanna Know?', 'Bertaut', 'Talking to the Moon', 'Dan', 'Satu Bulan', 'Akad'];
-        $randIndex = array_rand($artists);
-
-        return [
-            'id' => uniqid(),
-            'title' => $titles[$randIndex],
-            'artist' => $artists[$randIndex],
-            'album' => 'Zanify Hits',
-            'date_added' => date('M d, Y'),
-            'duration' => rand(2, 5) . ':' . str_pad(rand(0, 59), 2, '0', STR_PAD_LEFT)
-        ];
+        return response()->json(['status' => 'success', 'message' => 'Lagu diputar & masuk History (Stack)!', 'data' => $playedSong]);
     }
 }

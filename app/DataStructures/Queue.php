@@ -7,7 +7,6 @@ use App\DataStructures\Node;
 /**
  * Implementasi Struktur Data Tambahan (Nilai Plus)
  * Sesuai BAB III - Poin 3.4: Queue (Antrian)
- * * Digunakan untuk fitur "Add to Queue" (memutar lagu sementara tanpa masuk playlist utama).
  * Prinsip: FIFO (First In First Out).
  */
 class Queue
@@ -25,20 +24,16 @@ class Queue
 
     /**
      * Enqueue: Masuk antrian (Tambah Node di belakang Rear).
-     * Sesuai logika Add to Queue.
      */
     public function enqueue($data)
     {
         $newNode = new Node($data);
 
-        // Jika antrian kosong, Front & Rear menunjuk ke node baru
         if ($this->rear === null) {
             $this->front = $newNode;
             $this->rear = $newNode;
         } else {
-            // Sambungkan Rear saat ini ke Node baru
             $this->rear->next = $newNode;
-            // Pindahkan pointer Rear ke Node baru
             $this->rear = $newNode;
         }
         $this->count++;
@@ -46,7 +41,6 @@ class Queue
 
     /**
      * Dequeue: Keluar antrian (Ambil Node dari Front).
-     * Sesuai logika memutar lagu "Next Up".
      */
     public function dequeue()
     {
@@ -54,47 +48,31 @@ class Queue
             return null;
         }
 
-        // Simpan data node depan sementara
         $temp = $this->front;
-        
-        // Geser Front ke node berikutnya
         $this->front = $this->front->next;
 
-        // Jika setelah digeser Front jadi null (kosong), Rear juga harus null
         if ($this->front === null) {
             $this->rear = null;
         }
         
         $this->count--;
-
-        // Opsional: Putus koneksi node lama (Clean up reference)
-        $temp->next = null; 
-
+        
+        // Penting: Mengembalikan data lagu
         return $temp->data;
     }
 
     /**
-     * Peek: Melihat data antrian paling depan tanpa menghapusnya.
-     * Berguna untuk menampilkan info "Next Song" di UI Player.
+     * FUNGSI: Mengosongkan seluruh antrian.
      */
-    public function peek()
+    public function clear()
     {
-        if ($this->front === null) {
-            return null;
-        }
-        return $this->front->data;
+        $this->front = null;
+        $this->rear = null;
+        $this->count = 0;
     }
 
     /**
-     * Cek apakah Queue kosong.
-     */
-    public function isEmpty()
-    {
-        return $this->front === null;
-    }
-
-    /**
-     * Mengubah Queue jadi Array untuk ditampilkan di Frontend/View.
+     * FUNGSI: Mengambil semua data sebagai Array.
      */
     public function getQueue()
     {
@@ -105,5 +83,38 @@ class Queue
             $current = $current->next;
         }
         return $queueData;
+    }
+
+    /**
+     * FUNGSI: Memindahkan item dalam Antrian (Reordering).
+     */
+    public function moveItem(int $index, string $direction): bool
+    {
+        if ($index < 0 || $index >= $this->count || $this->count < 2) {
+            return false;
+        }
+        
+        $targetIndex = $index + ($direction === 'up' ? -1 : 1);
+
+        if ($targetIndex < 0 || $targetIndex >= $this->count) {
+            return false;
+        }
+        
+        // 1. Ambil data, lakukan pertukaran di Array
+        $dataArray = $this->getQueue();
+        
+        $temp = $dataArray[$index];
+        $dataArray[$index] = $dataArray[$targetIndex];
+        $dataArray[$targetIndex] = $temp;
+        
+        // 2. Kosongkan Queue yang lama secara total
+        $this->clear();
+        
+        // 3. Isi kembali Queue dengan urutan yang baru
+        foreach ($dataArray as $data) {
+            $this->enqueue($data);
+        }
+        
+        return true;
     }
 }
