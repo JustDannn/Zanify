@@ -5,8 +5,7 @@
         <h2 class="font-semibold text-lg">Your Library</h2>
         <button class="p-1 hover:bg-gray-800 rounded">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 6v12m6-6H6" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6" />
             </svg>
         </button>
     </div>
@@ -20,15 +19,11 @@
 
     {{-- SEARCH + SORT --}}
     <div class="px-4 pb-2 flex items-center justify-between">
-        <input
-            type="text"
-            placeholder="Search"
-            class="w-full bg-[#1c1c1c] text-sm px-3 py-1 rounded-full focus:outline-none"
-        >
+        <input type="text" placeholder="Search"
+            class="w-full bg-[#1c1c1c] text-sm px-3 py-1 rounded-full focus:outline-none">
         <button class="ml-2 hover:text-white">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 6h18M3 12h18m-7 6h7" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M3 12h18m-7 6h7" />
             </svg>
         </button>
     </div>
@@ -37,20 +32,18 @@
     <div class="overflow-y-auto flex-1 px-2">
 
         @foreach ($items as $item)
-            <div class="flex items-center gap-3 px-2 py-2 rounded hover:bg-[#1a1a1a] cursor-pointer">
+        <div class="flex items-center gap-3 px-2 py-2 rounded hover:bg-[#1a1a1a] cursor-pointer">
 
-                {{-- IMAGE --}}
-                <img
-                    src="https://api.dicebear.com/9.x/shapes/svg?seed={{ $item['title'] }}"
-                    class="w-12 h-12 rounded {{ $item['type'] === 'artist' ? 'rounded-full' : '' }}"
-                >
+            {{-- IMAGE --}}
+            <img src="https://api.dicebear.com/9.x/shapes/svg?seed={{ $item['title'] }}"
+                class="w-12 h-12 rounded {{ $item['type'] === 'artist' ? 'rounded-full' : '' }}">
 
-                <div>
-                    <div class="font-medium truncate">{{ $item['title'] }}</div>
-                    <div class="text-sm text-gray-400 truncate">{{ $item['subtitle'] }}</div>
-                </div>
-
+            <div>
+                <div class="font-medium truncate">{{ $item['title'] }}</div>
+                <div class="text-sm text-gray-400 truncate">{{ $item['subtitle'] }}</div>
             </div>
+
+        </div>
         @endforeach
 
     </div>

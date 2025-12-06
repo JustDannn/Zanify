@@ -1,8 +1,5 @@
 <x-layouts.app>
 
-    {{-- NAVBAR --}}
-    @livewire('components.navbar')
-
     {{-- WRAPPER FLEX --}}
     <div class="h-screen flex overflow-hidden">
 
