@@ -13,8 +13,9 @@
 <body>
     @livewire('components.navbar')
     <div class="h-screen flex overflow-hidden">
+        @unless (Route::is('admin.admin-dashboard'))
         @livewire('components.library')
-
+        @endunless
         <main class="flex-1 overflow-y-auto">
             {{ $slot }}
         </main>

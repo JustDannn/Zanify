@@ -1,47 +1,99 @@
-<div>
-    <div class="flex items-center justify-between mb-8">
-        <h1 class="text-3xl font-bold">My Library</h1>
+<div class="min-h-screen  bg-black flex">
 
-        <button class="px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600">
-            + Upload music
-        </button>
-    </div>
+    {{-- SIDEBAR --}}
+    <aside class="w-60 bg-[#0f0f0f] shadow-lg p-6">
+        <div class="text-2xl text-gray-200  font-bold mb-8">
+            Zanify Dashboard
+        </div>
 
-    {{-- Tabs --}}
-    <div class="flex gap-6 mb-6 border-b">
-        <button class="pb-2 border-b-2 border-black font-semibold">Released</button>
-        <button class="pb-2 text-gray-500">Upcoming</button>
-    </div>
+        <nav class="space-y-4 text-gray-200">
+            <a href="#" class="block text-lg font-semibold">My Library</a>
+            <a href="#" class="block text-lg font-semibold">Samples</a>
+            <a href="#" class="block text-lg font-semibold">Stats</a>
+        </nav>
 
-    {{-- Table --}}
-    <table class="w-full">
-        <thead class="text-gray-500 text-sm">
-            <tr>
-                <th class="text-left pb-3">Name</th>
-                <th class="text-left pb-3">Streams</th>
-                <th class="text-left pb-3">Listeners</th>
-                <th class="text-left pb-3">Saves</th>
-                <th class="text-left pb-3">Release date</th>
-            </tr>
-        </thead>
+        <div class="absolute bottom-6 left-6 text-sm text-gray-500">
+            Help
+        </div>
+    </aside>
 
-        <tbody class="text-sm">
-            @foreach($songs as $song)
-            <tr class="border-b hover:bg-gray-50">
-                <td class="py-4 flex items-center gap-3">
-                    <img src="{{ asset('storage/'.$song->cover) }}" class="w-12 h-12 rounded">
-                    <div>
-                        <p class="font-medium">{{ $song->title }}</p>
-                        <p class="text-gray-500 text-xs">{{ $song->artist }}</p>
-                    </div>
-                </td>
 
-                <td>{{ number_format($song->streams) }}</td>
-                <td>{{ number_format($song->listeners) }}</td>
-                <td>{{ number_format($song->saves) }}</td>
-                <td>{{ $song->release_date->format('M d, Y') }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    {{-- MAIN CONTENT --}}
+    <main class="flex-1 p-10">
+
+        {{-- Header --}}
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold text-white">My Library</h1>
+
+            <div class="flex gap-4">
+                {{-- Search --}}
+                <div class="relative">
+                    <input type="text" class="w-64 bg-[#161616] rounded-full px-4 py-2 text-gray-200"
+                        placeholder="Search library...">
+                    <span class="absolute right-3 top-2.5 text-gray-200"> <svg xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                    </span>
+                </div>
+
+                {{-- Upload Button --}}
+                <button class="bg-[#16a349] text-white px-5 py-2 rounded-full hover:bg-[#34a857]"
+                    wire:click="$dispatch('open-upload-modal')">
+                    + Upload Music
+                </button>
+            </div>
+        </div>
+
+
+        {{-- Tabs --}}
+        <div class="flex gap-6 border-b mb-6">
+            <button class="pb-2 border-b-2 border-black font-semibold">Released</button>
+            <button class="pb-2 text-gray-500">Upcoming</button>
+        </div>
+
+
+        {{-- TABLE --}}
+        <table class="w-full">
+            <thead class="text-left text-gray-300 text-sm">
+                <tr>
+                    <th class="pb-3">Name</th>
+                    <th class="pb-3">Streams</th>
+                    <th class="pb-3">Listeners</th>
+                    <th class="pb-3">Saves</th>
+                    <th class="pb-3">Release date</th>
+                </tr>
+            </thead>
+
+            <tbody class="text-gray-800 text-sm">
+                @forelse($songs as $song)
+                <tr class="border-t">
+                    {{-- Cover & Name --}}
+                    <td class="py-4 flex items-center gap-4">
+                        <img src="{{ $song->cover_url }}" class="w-12 h-12 rounded object-cover">
+                        <div>
+                            <div class="font-semibold text-lg">{{ $song->title }}</div>
+                            <div class="text-gray-500 text-sm">{{ $song->artist }}</div>
+                        </div>
+                    </td>
+
+                    <td class="py-4">{{ number_format($song->streams) }}</td>
+                    <td class="py-4">{{ number_format($song->listeners) }}</td>
+                    <td class="py-4">{{ number_format($song->saves) }}</td>
+                    <td class="py-4">
+                        {{ $song->release_date->format('M d, Y') }}
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="py-6 text-center text-gray-500">
+                        No songs uploaded yet.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+    </main>
 </div>

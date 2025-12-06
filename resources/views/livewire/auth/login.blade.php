@@ -36,29 +36,6 @@
             </button>
 
         </form>
-
-        {{-- Divider --}}
-        <div class="flex items-center my-6">
-            <div class="flex-1 h-px bg-neutral-700"></div>
-            <span class="px-3 text-neutral-400">or</span>
-            <div class="flex-1 h-px bg-neutral-700"></div>
-        </div>
-
-        {{-- Other login options --}}
-        <div class="space-y-3">
-
-            <button
-                class="flex items-center justify-center w-full bg-neutral-800 border border-neutral-700 text-white py-3 rounded-full">
-                Continue with Google
-            </button>
-
-            <button
-                class="flex items-center justify-center w-full bg-neutral-800 border border-neutral-700 text-white py-3 rounded-full">
-                Continue with Apple
-            </button>
-
-        </div>
-
         <p class="text-center text-neutral-400 mt-8">
             Don't have an account?
             <a href="{{ route('register') }}" class="text-white font-semibold hover:underline">
