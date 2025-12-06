@@ -39,10 +39,39 @@
                 </div>
 
                 {{-- Upload Button --}}
-                <button class="bg-[#16a349] text-white px-5 py-2 rounded-full hover:bg-[#34a857]"
-                    wire:click="$dispatch('open-upload-modal')">
-                    + Upload Music
-                </button>
+                <div x-data="{ openEditSongs: false }" x-on:open-edit-songs.window="openEditSongs = true"
+                    x-on:close-edit-songs.window="openEditSongs = false">
+                    <!-- Tombol -->
+                    <button @click="openEditSongs = true"
+                        class="bg-[#16a349] text-white px-5 py-2 rounded-full hover:bg-[#34a857] cursor-pointer font-semibold">
+                        + Add Songs
+                    </button>
+
+                    <!-- Modal Overlay -->
+                    <div x-show="openEditSongs" x-transition.opacity class="fixed inset-0 bg-black/70 z-40"></div>
+
+                    <!-- Modal Box -->
+                    <div x-show="openEditSongs" x-transition
+                        class="fixed inset-0 z-50 flex items-center justify-center">
+                        <div
+                            class="w-[900px] max-h-[90vh] overflow-y-auto bg-[#0e0e0e] rounded-2xl p-8 shadow-xl border border-white/10">
+
+                            <!-- HEADER -->
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl text-white font-semibold">Upload New Songs</h2>
+
+                                <button class="text-white text-2xl hover:text-red-400" @click="openEditSongs = false">
+                                    &times;
+                                </button>
+                            </div>
+
+                            <!-- LIVEWIRE POST COMPONENT (FULL CONTENT) -->
+                            @livewire('admin.post')
+
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 

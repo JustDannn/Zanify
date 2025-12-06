@@ -59,6 +59,13 @@ return [
             'throw' => false,
             'report' => false,
         ],
+        'azure' => [
+        'driver' => 'azure',
+        'endpoint' => env('AZURE_STORAGE_ENDPOINT'), // Pastikan ini ada di .env
+        'name' => env('AZURE_STORAGE_CONTAINER', 'songs'), // Mengambil nama container 'songs'
+        'key' => env('AZURE_CONNECTION_STRING'), // Pastikan ini ada di .env
+        'container' => env('AZURE_STORAGE_CONTAINER', 'songs'),
+        ],
 
     ],
 
