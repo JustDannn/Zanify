@@ -66,7 +66,7 @@
                             </div>
 
                             <!-- LIVEWIRE POST COMPONENT (FULL CONTENT) -->
-                            @livewire('admin.post')
+                            @livewire('admin.post', key('post-upload'))
 
                         </div>
                     </div>

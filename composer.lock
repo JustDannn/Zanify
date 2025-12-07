@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebf34cc210987e2aca1c21644ca652cf",
+    "content-hash": "995cd083e5b4c6d630b886db621386cf",
     "packages": [
         {
             "name": "brick/math",
@@ -1728,6 +1728,47 @@
                 "source": "https://github.com/thephpleague/flysystem/tree/3.30.2"
             },
             "time": "2025-11-10T17:13:11+00:00"
+        },
+        {
+            "name": "league/flysystem-azure-blob-storage",
+            "version": "3.30.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/flysystem-azure-blob-storage.git",
+                "reference": "731d07713f3541f3f204817117f27d4c7f175c5a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/flysystem-azure-blob-storage/zipball/731d07713f3541f3f204817117f27d4c7f175c5a",
+                "reference": "731d07713f3541f3f204817117f27d4c7f175c5a",
+                "shasum": ""
+            },
+            "require": {
+                "league/flysystem": "^3.10.0",
+                "microsoft/azure-storage-blob": "^1.1",
+                "php": "^8.0.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "League\\Flysystem\\AzureBlobStorage\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Frank de Jonge",
+                    "email": "info@frankdejonge.nl"
+                }
+            ],
+            "support": {
+                "source": "https://github.com/thephpleague/flysystem-azure-blob-storage/tree/3.30.0"
+            },
+            "abandoned": "azure-oss/storage-blob-flysystem",
+            "time": "2025-02-09T18:52:59+00:00"
         },
         {
             "name": "league/flysystem-local",
@@ -6231,6 +6272,52 @@
                 }
             ],
             "time": "2024-11-21T01:49:47+00:00"
+        },
+        {
+            "name": "wapmorgan/mp3info",
+            "version": "0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wapmorgan/Mp3Info.git",
+                "reference": "e532c2e1997874f9c672c7810ce90ef15004ef94"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wapmorgan/Mp3Info/zipball/e532c2e1997874f9c672c7810ce90ef15004ef94",
+                "reference": "e532c2e1997874f9c672c7810ce90ef15004ef94",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=5.4.0"
+            },
+            "bin": [
+                "bin/mp3scan"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "wapmorgan\\Mp3Info\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0"
+            ],
+            "description": "The fastest php library to extract mp3 tags & meta information.",
+            "keywords": [
+                "audio",
+                "id3",
+                "id3v1",
+                "id3v2",
+                "mp3",
+                "mpeg"
+            ],
+            "support": {
+                "issues": "https://github.com/wapmorgan/Mp3Info/issues",
+                "source": "https://github.com/wapmorgan/Mp3Info/tree/0.1.1"
+            },
+            "time": "2025-04-01T20:51:11+00:00"
         }
     ],
     "packages-dev": [
