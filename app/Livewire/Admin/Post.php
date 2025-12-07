@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\Album;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -13,10 +14,12 @@ class Post extends Component
 
     public $songFiles = [];
     public $uploadedSongs = [];
+    public $coverFiles = []; // Separate array for cover uploads
     public $isUploading = false;
     public $isOpen = false;
     public $uploadError = null;
     public $uploadProgress = 0;
+    public $selectedAlbumId = null; // Album selection for all songs
 
     protected $rules = [
         'songFiles.*' => 'file|max:102400|mimes:mp3,wav',
@@ -24,10 +27,31 @@ class Post extends Component
         'uploadedSongs.*.label' => 'nullable|string|max:255',
         'uploadedSongs.*.genre' => 'nullable|string',
         'uploadedSongs.*.tags' => 'nullable|string',
-        'uploadedSongs.*.cover' => 'nullable|image|max:5120',
+        'coverFiles.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
+    ];
+
+    protected $messages = [
+        'songFiles.*.mimes' => 'Song files must be MP3 or WAV format.',
+        'songFiles.*.max' => 'Song file must be less than 100MB.',
+        'coverFiles.*.image' => 'Cover must be an image file.',
+        'coverFiles.*.mimes' => 'Cover must be JPG, PNG, GIF, or WebP.',
+        'coverFiles.*.max' => 'Cover must be less than 5MB.',
     ];
 
     protected $listeners = ['fileUploaded' => 'handleFileUploaded'];
+
+    /**
+     * Handle cover file upload for specific song index
+     */
+    public function updatedCoverFiles($value, $key)
+    {
+        Log::info('Cover uploaded', ['key' => $key, 'hasFile' => !empty($value)]);
+        
+        // Key will be the index like "0", "1", etc.
+        if (isset($this->uploadedSongs[$key])) {
+            $this->uploadedSongs[$key]['has_cover'] = true;
+        }
+    }
 
     public function updatedSongFiles()
     {
@@ -113,7 +137,7 @@ class Post extends Component
             'label' => '',
             'genre' => '',
             'tags' => '',
-            'cover' => null,
+            'has_cover' => false,
             'storage_type' => $storageType,
         ];
     }
@@ -131,8 +155,14 @@ class Post extends Component
             }
         }
         
+        // Also remove cover file if exists
+        if (isset($this->coverFiles[$index])) {
+            unset($this->coverFiles[$index]);
+        }
+        
         unset($this->uploadedSongs[$index]);
         $this->uploadedSongs = array_values($this->uploadedSongs);
+        $this->coverFiles = array_values($this->coverFiles);
     }
 
     public function saveAllSongs()
@@ -141,7 +171,7 @@ class Post extends Component
         $this->uploadError = null;
 
         try {
-            foreach ($this->uploadedSongs as $song) {
+            foreach ($this->uploadedSongs as $index => $song) {
                 $storageType = $song['storage_type'] ?? 'public';
                 
                 // ========== MOVE FILE FROM TEMP → FINAL ==========
@@ -167,17 +197,27 @@ class Post extends Component
 
                 // ========== UPLOAD COVER (OPTIONAL) ==========
                 $coverPath = null;
-                if (!empty($song['cover']) && is_object($song['cover'])) {
-                    $coverPath = $song['cover']->store('covers', $storageType);
+                if (isset($this->coverFiles[$index]) && $this->coverFiles[$index]) {
+                    try {
+                        $coverPath = $this->coverFiles[$index]->store('covers', 'azure');
+                    } catch (\Exception $e) {
+                        Log::warning('Azure cover upload failed, using local: ' . $e->getMessage());
+                        $coverPath = $this->coverFiles[$index]->store('covers', 'public');
+                    }
                 }
 
                 // ========== SAVE TO DATABASE ==========
                 $newSong = \App\Models\Song::create([
-                    'title'      => $song['name'],
-                    'album_id'   => null,
-                    'cover'      => $coverPath,
-                    'audio_path' => $finalAudioPath,
-                    'duration'   => $duration,
+                    'title'        => $song['name'],
+                    'artist_name'  => $song['label'] ?: auth()->user()->name ?? 'Unknown Artist',
+                    'album_id'     => $this->selectedAlbumId ?: null,
+                    'cover'        => $coverPath,
+                    'audio_path'   => $finalAudioPath,
+                    'duration'     => $duration,
+                    'play_count'   => 0,
+                    'listeners'    => 0,
+                    'save_count'   => 0,
+                    'release_date' => now(),
                 ]);
 
                 Log::info('Song saved to database', ['id' => $newSong->id, 'title' => $newSong->title]);
@@ -185,6 +225,7 @@ class Post extends Component
 
             session()->flash('success', 'Songs successfully uploaded!');
             $this->uploadedSongs = [];
+            $this->selectedAlbumId = null;
             $this->dispatch('close-upload-modal');
 
         } catch (\Exception $e) {
@@ -196,6 +237,8 @@ class Post extends Component
 
     public function render()
     {
-        return view('livewire.admin.post');
+        return view('livewire.admin.post', [
+            'albums' => Album::orderBy('title')->get(),
+        ]);
     }
 }

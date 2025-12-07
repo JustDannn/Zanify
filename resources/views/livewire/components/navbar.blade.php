@@ -22,19 +22,35 @@
                             d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
                     </svg>
 
-                    <input wire:model.live="query" @focus="open = true" id="global-search" type="text"
+                    <input wire:model.live.debounce.150ms="query" @focus="open = true" id="global-search" type="text"
                         placeholder="What do you want to play?"
                         class="bg-transparent w-full focus:outline-none text-gray-200" />
+
+                    @if($query)
+                    <button wire:click="clearSearch" class="text-gray-400 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    @endif
                 </div>
 
-                {{-- DROPDOWN --}}
+                {{-- DROPDOWN SUGGESTIONS --}}
                 @if(!empty($suggestions))
                 <div
-                    class="absolute mt-2 w-full bg-[#1c1c1c] rounded-xl shadow-xl border border-gray-800 animate-fadeIn z-50">
+                    class="absolute mt-2 w-full bg-[#282828] rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50">
                     @foreach($suggestions as $item)
-                    <div wire:click="selectSuggestion('{{ $item }}')"
-                        class="px-4 py-2 hover:bg-gray-800 cursor-pointer rounded-lg transition">
-                        {{ $item }}
+                    <div wire:click="selectSuggestion('{{ $item['type'] }}', {{ $item['id'] }})"
+                        class="flex items-center gap-3 px-4 py-2 hover:bg-[#3e3e3e] cursor-pointer transition">
+                        <img src="{{ $item['cover'] }}" alt="{{ $item['title'] }}"
+                            class="w-10 h-10 {{ $item['type'] === 'album' ? 'rounded' : 'rounded' }} object-cover bg-gray-700">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium truncate">{{ $item['title'] }}</p>
+                            <p class="text-gray-400 text-sm truncate">
+                                <span class="capitalize">{{ $item['type'] }}</span> • {{ $item['subtitle'] }}
+                            </p>
+                        </div>
                     </div>
                     @endforeach
                 </div>

@@ -1,12 +1,15 @@
 <?php
-namespace App\Livewire;
 
+namespace App\Livewire\Components;
+
+use App\Models\Song;
+use App\Models\Album;
 use Livewire\Component;
 
 class Navbar extends Component
 {
-    public string $query = '';     // ⬅️ INI HARUS ADA
-    public ?array $suggestions = [];
+    public string $query = '';
+    public $suggestions = [];
 
     public function mount()
     {
@@ -15,38 +18,56 @@ class Navbar extends Component
 
     public function updatedQuery()
     {
-        if (strlen($this->query) < 1) {
+        // Dispatch event to SearchResults component
+        $this->dispatch('search-updated', query: $this->query);
+
+        if (strlen($this->query) < 2) {
             $this->suggestions = [];
             return;
         }
 
-        $data = [
-            'Valorant',
-            'GTA V',
-            'The Witcher 3',
-            'Elden Ring',
-            'Baldur’s Gate 3',
-            'Roblox',
-            'Fortnite',
-            'Minecraft',
-            'League of Legends',
-        ];
-
-        $this->suggestions = collect($data)
-            ->filter(fn ($item) => str_contains(strtolower($item), strtolower($this->query)))
+        // Get quick suggestions for dropdown
+        $songs = Song::where('title', 'like', '%' . $this->query . '%')
+            ->orWhere('artist_name', 'like', '%' . $this->query . '%')
             ->take(5)
-            ->values()
-            ->toArray();
+            ->get()
+            ->map(fn($song) => [
+                'type' => 'song',
+                'id' => $song->id,
+                'title' => $song->title,
+                'subtitle' => $song->artist_display,
+                'cover' => $song->cover_url,
+            ]);
+
+        $albums = Album::where('title', 'like', '%' . $this->query . '%')
+            ->take(3)
+            ->get()
+            ->map(fn($album) => [
+                'type' => 'album',
+                'id' => $album->id,
+                'title' => $album->title,
+                'subtitle' => $album->artist_name,
+                'cover' => $album->cover_url,
+            ]);
+
+        $this->suggestions = $songs->concat($albums)->take(6)->toArray();
     }
 
-    public function selectSuggestion($text)
+    public function selectSuggestion($type, $id)
     {
-        $this->query = $text;
+        // Handle selection if needed
         $this->suggestions = [];
+    }
+
+    public function clearSearch()
+    {
+        $this->query = '';
+        $this->suggestions = [];
+        $this->dispatch('search-updated', query: '');
     }
 
     public function render()
     {
-        return view('livewire.navbar');
+        return view('livewire.components.navbar');
     }
 }

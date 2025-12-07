@@ -1,9 +1,2 @@
-import {
-    Livewire,
-    Alpine,
-} from "../../vendor/livewire/livewire/dist/livewire.esm";
-
-window.Alpine = Alpine;
-Alpine.start();
-
-Livewire.start();
+// Livewire and Alpine are automatically started by Livewire's scripts
+// No need to manually import or start them here
