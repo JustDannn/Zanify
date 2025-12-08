@@ -80,6 +80,12 @@ class RecentlyPlayed extends Component
 
     public function playSong(int $songId)
     {
+        // Flatten all songs for autoplay source
+        $allSongIds = collect($this->groupedSongs)
+            ->flatMap(fn($group) => collect($group['songs'])->pluck('id'))
+            ->toArray();
+        
+        $this->dispatch('set-play-source', sourceName: 'Recently Played', songIds: $allSongIds, startFromSongId: $songId);
         $this->dispatch('play-song', songId: $songId);
     }
 

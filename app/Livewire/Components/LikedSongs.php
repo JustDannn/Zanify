@@ -57,10 +57,15 @@ class LikedSongs extends Component
     }
 
     /**
-     * Play a song
+     * Play a song and set up autoplay from Liked Songs
      */
     public function playSong(int $songId)
     {
+        // Set the source for autoplay
+        $songIds = $this->songs->pluck('id')->toArray();
+        $this->dispatch('set-play-source', sourceName: 'Liked Songs', songIds: $songIds, startFromSongId: $songId);
+        
+        // Play the song
         $this->dispatch('play-song', songId: $songId);
     }
 

@@ -67,6 +67,10 @@ class SearchResults extends Component
 
     public function playSong(int $songId)
     {
+        // Set the source for autoplay from search results
+        $songIds = $this->songs->pluck('id')->toArray();
+        $this->dispatch('set-play-source', sourceName: 'Search Results', songIds: $songIds, startFromSongId: $songId);
+        
         // Dispatch to Player component
         $this->dispatch('play-song', songId: $songId);
     }
