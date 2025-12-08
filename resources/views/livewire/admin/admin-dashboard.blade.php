@@ -92,7 +92,10 @@
                 :class="activeTab === 'albums' ? 'border-b-2 border-white text-white' : 'text-gray-500 hover:text-gray-300'">
                 Albums
             </button>
-            <button class="pb-2 text-gray-500 hover:text-gray-300">Upcoming</button>
+            <button @click="activeTab = 'artists'" class="pb-2 font-semibold transition"
+                :class="activeTab === 'artists' ? 'border-b-2 border-white text-white' : 'text-gray-500 hover:text-gray-300'">
+                Artists
+            </button>
         </div>
 
 
@@ -196,6 +199,11 @@
             @livewire('admin.album-manager')
         </div>
 
+        {{-- ARTISTS TAB CONTENT --}}
+        <div x-show="activeTab === 'artists'" x-cloak>
+            @livewire('admin.artist-manager')
+        </div>
+
     </main>
 
     {{-- ==================== EDIT SONG MODAL ==================== --}}
@@ -255,14 +263,59 @@
                                 @enderror
                             </div>
 
-                            {{-- Artist --}}
-                            <div>
-                                <label class="block text-gray-400 text-sm mb-2">Artist Name</label>
-                                <input type="text" wire:model="editForm.artist_name"
-                                    placeholder="Multiple artists: Artist1, Artist2"
+                            {{-- Artist (Searchable with Tags) --}}
+                            <div class="relative" x-data="{ showSuggestions: false, searchText: '' }">
+                                <label class="block text-gray-400 text-sm mb-2">Artists</label>
+
+                                {{-- Selected Artists Tags --}}
+                                @if(!empty($editSelectedArtists))
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    @foreach($editSelectedArtists as $artistIndex => $selectedArtist)
+                                    <span
+                                        class="inline-flex items-center gap-1 px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm">
+                                        {{ $selectedArtist['name'] }}
+                                        <button type="button" wire:click="removeEditArtist({{ $artistIndex }})"
+                                            class="hover:text-red-400">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </span>
+                                    @endforeach
+                                </div>
+                                @endif
+
+                                <input type="text" placeholder="Search for artists..." x-model="searchText"
+                                    x-on:input.debounce.300ms="$wire.searchEditArtists(searchText)"
+                                    @focus="showSuggestions = true" @click.away="showSuggestions = false"
                                     class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-green-500 focus:outline-none">
-                                @error('editForm.artist_name') <span class="text-red-400 text-sm">{{ $message }}</span>
-                                @enderror
+
+                                {{-- Artist Suggestions Dropdown --}}
+                                @if(!empty($editArtistSuggestions))
+                                <div x-show="showSuggestions" x-cloak
+                                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto">
+                                    @foreach($editArtistSuggestions as $suggestion)
+                                    <button type="button" wire:click="selectEditArtist({{ $suggestion['id'] }})"
+                                        @click="searchText = ''; showSuggestions = false"
+                                        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#383838] transition text-left">
+                                        @if($suggestion['photo'])
+                                        <img src="{{ $suggestion['photo'] }}"
+                                            class="w-10 h-10 rounded-full object-cover">
+                                        @else
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        </div>
+                                        @endif
+                                        <span class="text-white">{{ $suggestion['name'] }}</span>
+                                    </button>
+                                    @endforeach
+                                </div>
+                                @endif
                             </div>
 
                             {{-- Release Date --}}
@@ -274,18 +327,75 @@
                                 @enderror
                             </div>
 
-                            {{-- Album Selection --}}
-                            <div>
+                            {{-- Album Selection (Searchable) --}}
+                            <div class="relative" x-data="{ showAlbumSuggestions: false, albumSearchText: '' }">
                                 <label class="block text-gray-400 text-sm mb-2">Album</label>
-                                <select wire:model="editForm.album_id"
+
+                                @if($editSelectedAlbum)
+                                {{-- Selected Album Display --}}
+                                <div
+                                    class="flex items-center gap-3 bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3">
+                                    @if($editSelectedAlbum->cover)
+                                    <img src="{{ $editSelectedAlbum->cover_url }}"
+                                        class="w-10 h-10 rounded object-cover">
+                                    @else
+                                    <div class="w-10 h-10 rounded bg-gray-700 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                    </div>
+                                    @endif
+                                    <div class="flex-1">
+                                        <span class="text-white">{{ $editSelectedAlbum->title }}</span>
+                                        <span class="text-gray-500 text-sm block">{{ $editSelectedAlbum->artist_name
+                                            }}</span>
+                                    </div>
+                                    <button type="button" wire:click="clearEditAlbum"
+                                        class="text-gray-400 hover:text-red-400 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                @else
+                                {{-- Search Input --}}
+                                <input type="text" placeholder="Search for album or leave empty for Single..."
+                                    x-model="albumSearchText"
+                                    x-on:input.debounce.300ms="$wire.searchEditAlbums(albumSearchText)"
+                                    @focus="showAlbumSuggestions = true" @click.away="showAlbumSuggestions = false"
                                     class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-green-500 focus:outline-none">
-                                    <option value="">Single (No Album)</option>
-                                    @foreach($albums as $album)
-                                    <option value="{{ $album->id }}">{{ $album->title }}</option>
+
+                                {{-- Album Suggestions Dropdown --}}
+                                @if(count($editAlbumSuggestions) > 0)
+                                <div x-show="showAlbumSuggestions" x-cloak
+                                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto">
+                                    @foreach($editAlbumSuggestions as $album)
+                                    <button type="button" wire:click="selectEditAlbum({{ $album->id }})"
+                                        @click="albumSearchText = ''; showAlbumSuggestions = false"
+                                        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#383838] transition text-left">
+                                        @if($album->cover)
+                                        <img src="{{ $album->cover_url }}" class="w-10 h-10 rounded object-cover">
+                                        @else
+                                        <div class="w-10 h-10 rounded bg-gray-700 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                            </svg>
+                                        </div>
+                                        @endif
+                                        <div>
+                                            <span class="text-white">{{ $album->title }}</span>
+                                            <span class="text-gray-500 text-sm block">{{ $album->artist_name }}</span>
+                                        </div>
+                                    </button>
                                     @endforeach
-                                </select>
-                                @error('editForm.album_id') <span class="text-red-400 text-sm">{{ $message }}</span>
-                                @enderror
+                                </div>
+                                @endif
+                                @endif
                             </div>
                         </div>
                     </div>

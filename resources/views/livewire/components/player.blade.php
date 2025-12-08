@@ -17,16 +17,19 @@
                 <p class="text-white text-sm font-medium truncate" x-text="title || 'No song playing'"></p>
                 <p class="text-gray-400 text-xs truncate" x-text="artist || '-'"></p>
             </div>
-            {{-- Like button --}}
-            <button class="text-gray-400 hover:text-white transition ml-2" @click="liked = !liked">
-                <svg x-show="!liked" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {{-- Like button (connected to Livewire) --}}
+            <button wire:click="toggleLike" class="text-gray-400 hover:text-white transition ml-2 hover:scale-110">
+                @if($isLiked)
+                <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                @else
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                <svg x-show="liked" class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                @endif
             </button>
         </div>
 
@@ -43,7 +46,7 @@
                     </svg>
                 </button>
                 {{-- Previous --}}
-                <button class="text-gray-400 hover:text-white transition">
+                <button @click="playPrevious()" class="text-gray-400 hover:text-white transition" title="Previous">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
                     </svg>
@@ -59,7 +62,7 @@
                     </svg>
                 </button>
                 {{-- Next --}}
-                <button class="text-gray-400 hover:text-white transition">
+                <button @click="playNext()" class="text-gray-400 hover:text-white transition" title="Next">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
                     </svg>
@@ -102,7 +105,7 @@
                 </svg>
             </button>
             {{-- Queue --}}
-            <button class="text-gray-400 hover:text-white transition">
+            <button class="text-gray-400 hover:text-white transition" @click="$dispatch('toggle-queue')" title="Queue">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
                 </svg>
@@ -247,12 +250,29 @@
                 this.setVolume(this.volume);
             },
 
+            playNext() {
+                // Request next song from queue
+                Livewire.dispatch('request-next-song');
+            },
+
+            playPrevious() {
+                // If more than 3 seconds in, restart current song
+                if (this.currentTime > 3) {
+                    this.$refs.audio.currentTime = 0;
+                } else {
+                    // Otherwise, play previous song from history
+                    Livewire.dispatch('request-previous-song');
+                }
+            },
+
             handleEnded() {
                 if (this.repeat) {
                     this.$refs.audio.currentTime = 0;
                     this.$refs.audio.play();
                 } else {
                     this.isPlaying = false;
+                    // Request next song from queue
+                    Livewire.dispatch('request-next-song');
                 }
             },
 

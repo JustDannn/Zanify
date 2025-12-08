@@ -74,14 +74,35 @@
                             <p class="text-gray-400 text-sm truncate">{{ $song->artist_display }}</p>
                         </div>
 
-                        {{-- Liked indicator (placeholder) --}}
-                        <div class="opacity-0 group-hover:opacity-100 transition">
-                            <svg class="w-5 h-5 text-gray-400 hover:text-white" fill="none" stroke="currentColor"
+                        {{-- Like Button --}}
+                        <button wire:click.stop="toggleLike({{ $song->id }})"
+                            class="opacity-0 group-hover:opacity-100 transition {{ in_array($song->id, $likedSongIds) ? 'opacity-100' : '' }}">
+                            @if(in_array($song->id, $likedSongIds))
+                            {{-- Liked (filled green heart) --}}
+                            <svg class="w-5 h-5 text-green-500 hover:scale-110 transition" fill="currentColor"
                                 viewBox="0 0 24 24">
+                                <path
+                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                            @else
+                            {{-- Not liked (outline heart) --}}
+                            <svg class="w-5 h-5 text-gray-400 hover:text-white hover:scale-110 transition" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
-                        </div>
+                            @endif
+                        </button>
+
+                        {{-- Add to Queue Button --}}
+                        <button wire:click.stop="addToQueue({{ $song->id }})"
+                            class="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-white"
+                            title="Add to Queue">
+                            <svg class="w-5 h-5 hover:scale-110 transition" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                            </svg>
+                        </button>
 
                         {{-- Duration --}}
                         <span class="text-gray-400 text-sm w-12 text-right">{{ $song->duration_formatted }}</span>

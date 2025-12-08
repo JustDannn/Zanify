@@ -3,6 +3,8 @@
 namespace App\Livewire\Components;
 
 use Livewire\Component;
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Auth;
 
 class Library extends Component
 {
@@ -10,33 +12,36 @@ class Library extends Component
 
     public function mount()
     {
-        // Dummy data dulu
-        $this->items = [
-            [
+        $this->loadLibrary();
+    }
+
+    #[On('songLikeToggled')]
+    public function onSongLikeToggled(?int $songId = null, ?bool $liked = null)
+    {
+        // Just refresh the library when a song is liked/unliked
+        $this->loadLibrary();
+    }
+
+    public function loadLibrary()
+    {
+        $this->items = [];
+        
+        // Liked Songs - only for authenticated users (not admin)
+        // Admin uses session-based auth without a database record, so can't have liked songs
+        if (Auth::check()) {
+            $likedCount = Auth::user()->likedSongs()->count();
+            
+            $this->items[] = [
                 'type' => 'playlist',
                 'title' => 'Liked Songs',
-                'subtitle' => 'Playlist · 1,175 songs',
-                'image' => '/images/liked.png', // nanti ganti
-            ],
-            [
-                'type' => 'playlist',
-                'title' => 'dancing in the night',
-                'subtitle' => 'Playlist · Dani Nurfatah',
-                'image' => '/images/default.jpg',
-            ],
-            [
-                'type' => 'artist',
-                'title' => 'Mac DeMarco',
-                'subtitle' => 'Artist',
-                'image' => '/images/default.jpg',
-            ],
-            [
-                'type' => 'playlist',
-                'title' => 'NANGIS AMPE MATA BE...',
-                'subtitle' => 'Playlist · @radionangis',
-                'image' => '/images/default.jpg',
-            ],
-        ];
+                'subtitle' => 'Playlist · ' . $likedCount . ' ' . \Illuminate\Support\Str::plural('song', $likedCount),
+                'image' => null, // Special gradient
+                'route' => route('liked-songs'),
+                'is_liked_songs' => true,
+            ];
+        }
+        
+        // You can add more library items here later (playlists, followed artists, etc.)
     }
 
     public function render()

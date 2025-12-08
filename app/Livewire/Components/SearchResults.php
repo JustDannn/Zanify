@@ -71,8 +71,57 @@ class SearchResults extends Component
         $this->dispatch('play-song', songId: $songId);
     }
 
+    /**
+     * Add song to queue
+     */
+    public function addToQueue(int $songId)
+    {
+        $this->dispatch('add-to-queue', songId: $songId);
+    }
+
+    /**
+     * Toggle like status for a song
+     */
+    public function toggleLike(int $songId)
+    {
+        if (!\Illuminate\Support\Facades\Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $song = Song::find($songId);
+        if ($song) {
+            $liked = \Illuminate\Support\Facades\Auth::user()->toggleLike($song);
+            
+            // Dispatch event to update other components (player, liked-songs page, etc.)
+            $this->dispatch('songLikeToggled', songId: $songId, liked: $liked);
+        }
+    }
+
+    /**
+     * Check if current user has liked a song
+     */
+    public function isLiked(int $songId): bool
+    {
+        if (!\Illuminate\Support\Facades\Auth::check()) {
+            return false;
+        }
+        
+        $song = Song::find($songId);
+        return $song ? \Illuminate\Support\Facades\Auth::user()->hasLiked($song) : false;
+    }
+
     public function render()
     {
-        return view('livewire.components.search-results');
+        $likedSongIds = [];
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            $likedSongIds = \Illuminate\Support\Facades\Auth::user()
+                ->likedSongs()
+                ->pluck('songs.id')
+                ->toArray();
+        }
+        
+        return view('livewire.components.search-results', [
+            'likedSongIds' => $likedSongIds
+        ]);
     }
 }

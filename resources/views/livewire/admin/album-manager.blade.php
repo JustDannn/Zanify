@@ -153,14 +153,75 @@
                                 @enderror
                             </div>
 
-                            {{-- Artist --}}
-                            <div>
-                                <label class="block text-gray-400 text-sm mb-2">Artist Name</label>
-                                <input type="text" wire:model="createForm.artist_name"
+                            {{-- Artist (Searchable) --}}
+                            <div x-data="{ open: false, searchText: '' }" @click.away="open = false" class="relative">
+                                <label class="block text-gray-400 text-sm mb-2">Artist *</label>
+
+                                @if($createSelectedArtist)
+                                {{-- Selected Artist Display --}}
+                                <div
+                                    class="flex items-center gap-3 bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3">
+                                    @if($createSelectedArtist->photo)
+                                    <img src="{{ $createSelectedArtist->photo_url }}"
+                                        class="w-8 h-8 rounded-full object-cover">
+                                    @else
+                                    <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                        </svg>
+                                    </div>
+                                    @endif
+                                    <span class="text-white flex-1">{{ $createSelectedArtist->name }}</span>
+                                    <button type="button" wire:click="clearCreateArtist"
+                                        class="text-gray-400 hover:text-red-400 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                @else
+                                {{-- Search Input --}}
+                                <input type="text" x-model="searchText"
+                                    x-on:input.debounce.300ms="$wire.set('createArtistSearch', searchText)"
+                                    @focus="open = true"
                                     class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-green-500 focus:outline-none"
-                                    placeholder="Enter artist name">
-                                @error('createForm.artist_name') <span class="text-red-400 text-sm">{{ $message
-                                    }}</span> @enderror
+                                    placeholder="Search for artist...">
+
+                                {{-- Suggestions Dropdown --}}
+                                @if(count($createArtistSuggestions) > 0)
+                                <div x-show="open"
+                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg overflow-hidden shadow-xl max-h-48 overflow-y-auto">
+                                    @foreach($createArtistSuggestions as $artist)
+                                    <button type="button" wire:click="selectCreateArtist({{ $artist->id }})"
+                                        @click="open = false; searchText = ''"
+                                        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition text-left">
+                                        @if($artist->photo)
+                                        <img src="{{ $artist->photo_url }}" class="w-10 h-10 rounded-full object-cover">
+                                        @else
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        </div>
+                                        @endif
+                                        <span class="text-white">{{ $artist->name }}</span>
+                                    </button>
+                                    @endforeach
+                                </div>
+                                @elseif(strlen($createArtistSearch) >= 2)
+                                <div x-show="open && searchText.length >= 2"
+                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg p-4 text-center text-gray-500">
+                                    No artists found. Create one in "Artists" tab first.
+                                </div>
+                                @endif
+                                @endif
+
+                                @error('createSelectedArtist') <span class="text-red-400 text-sm">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
@@ -288,13 +349,75 @@
                                 @enderror
                             </div>
 
-                            {{-- Artist --}}
-                            <div>
-                                <label class="block text-gray-400 text-sm mb-2">Artist Name</label>
-                                <input type="text" wire:model="editForm.artist_name"
+                            {{-- Artist (Searchable) --}}
+                            <div x-data="{ open: false, searchText: '{{ $editSelectedArtist ? '' : $editArtistSearch }}' }"
+                                @click.away="open = false" class="relative">
+                                <label class="block text-gray-400 text-sm mb-2">Artist *</label>
+
+                                @if($editSelectedArtist)
+                                {{-- Selected Artist Display --}}
+                                <div
+                                    class="flex items-center gap-3 bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3">
+                                    @if($editSelectedArtist->photo)
+                                    <img src="{{ $editSelectedArtist->photo_url }}"
+                                        class="w-8 h-8 rounded-full object-cover">
+                                    @else
+                                    <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                        </svg>
+                                    </div>
+                                    @endif
+                                    <span class="text-white flex-1">{{ $editSelectedArtist->name }}</span>
+                                    <button type="button" wire:click="clearEditArtist"
+                                        class="text-gray-400 hover:text-red-400 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                @else
+                                {{-- Search Input --}}
+                                <input type="text" x-model="searchText"
+                                    x-on:input.debounce.300ms="$wire.set('editArtistSearch', searchText)"
+                                    @focus="open = true"
                                     class="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-green-500 focus:outline-none"
-                                    placeholder="Enter artist name">
-                                @error('editForm.artist_name') <span class="text-red-400 text-sm">{{ $message }}</span>
+                                    placeholder="Search for artist...">
+
+                                {{-- Suggestions Dropdown --}}
+                                @if(count($editArtistSuggestions) > 0)
+                                <div x-show="open"
+                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg overflow-hidden shadow-xl max-h-48 overflow-y-auto">
+                                    @foreach($editArtistSuggestions as $artist)
+                                    <button type="button" wire:click="selectEditArtist({{ $artist->id }})"
+                                        @click="open = false; searchText = ''"
+                                        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition text-left">
+                                        @if($artist->photo)
+                                        <img src="{{ $artist->photo_url }}" class="w-10 h-10 rounded-full object-cover">
+                                        @else
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                            </svg>
+                                        </div>
+                                        @endif
+                                        <span class="text-white">{{ $artist->name }}</span>
+                                    </button>
+                                    @endforeach
+                                </div>
+                                @elseif(strlen($editArtistSearch) >= 2)
+                                <div x-show="open && searchText.length >= 2"
+                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg p-4 text-center text-gray-500">
+                                    No artists found. Create one in "Artists" tab first.
+                                </div>
+                                @endif
+                                @endif
+
+                                @error('editSelectedArtist') <span class="text-red-400 text-sm">{{ $message }}</span>
                                 @enderror
                             </div>
 

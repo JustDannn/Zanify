@@ -174,11 +174,65 @@
                         <input type="text" placeholder="Song name" wire:model.defer="uploadedSongs.{{ $index }}.name"
                             class="w-full bg-[#2a2a2a] text-white placeholder-gray-500 rounded-lg border-0 px-4 py-3 focus:ring-2 focus:ring-green-500">
 
-                        <div class="grid grid-cols-2 gap-3">
-                            {{-- Label --}}
-                            <input type="text" placeholder="Label" wire:model.defer="uploadedSongs.{{ $index }}.label"
+                        {{-- Artist Search --}}
+                        <div class="relative" x-data="{ showSuggestions: false, searchText: '' }">
+                            <label class="block text-gray-400 text-xs mb-1">Artists</label>
+
+                            {{-- Selected Artists Tags --}}
+                            @if(!empty($song['selected_artists']))
+                            <div class="flex flex-wrap gap-2 mb-2">
+                                @foreach($song['selected_artists'] as $artistIndex => $selectedArtist)
+                                <span
+                                    class="inline-flex items-center gap-1 px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm">
+                                    {{ $selectedArtist['name'] }}
+                                    <button type="button" wire:click="removeArtist({{ $index }}, {{ $artistIndex }})"
+                                        class="hover:text-red-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </span>
+                                @endforeach
+                            </div>
+                            @endif
+
+                            <input type="text" placeholder="Search for artists..." x-model="searchText"
+                                x-on:input.debounce.300ms="$wire.searchArtists({{ $index }}, searchText)"
+                                @focus="showSuggestions = true" @click.away="showSuggestions = false"
                                 class="w-full bg-[#2a2a2a] text-white placeholder-gray-500 rounded-lg border-0 px-4 py-3 focus:ring-2 focus:ring-green-500">
 
+                            {{-- Artist Suggestions Dropdown --}}
+                            @if(!empty($song['artist_suggestions']))
+                            <div x-show="showSuggestions" x-cloak
+                                class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto">
+                                @foreach($song['artist_suggestions'] as $suggestion)
+                                <button type="button" wire:click="selectArtist({{ $index }}, {{ $suggestion['id'] }})"
+                                    @click="searchText = ''; showSuggestions = false"
+                                    class="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#383838] transition text-left">
+                                    @if($suggestion['photo'])
+                                    <img src="{{ $suggestion['photo'] }}" class="w-10 h-10 rounded-full object-cover">
+                                    @else
+                                    <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                        </svg>
+                                    </div>
+                                    @endif
+                                    <span class="text-white">{{ $suggestion['name'] }}</span>
+                                </button>
+                                @endforeach
+                            </div>
+                            @elseif(strlen($song['artist_search'] ?? '') >= 2)
+                            <div x-show="showSuggestions && searchText.length >= 2" x-cloak
+                                class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 p-4 text-center text-gray-500">
+                                No artists found. Create one in "Artists" tab first.
+                            </div>
+                            @endif
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
                             {{-- Genre --}}
                             <select wire:model.defer="uploadedSongs.{{ $index }}.genre"
                                 class="w-full bg-[#2a2a2a] text-gray-400 rounded-lg border-0 px-4 py-3 focus:ring-2 focus:ring-green-500">
@@ -208,23 +262,50 @@
 
     {{-- Save Button --}}
     <div class="mt-6 flex flex-col gap-4">
-        {{-- Album Selector --}}
-        <div class="flex items-center gap-3">
+        {{-- Album Selector (Searchable) --}}
+        <div class="flex items-center gap-3" x-data="{ showAlbumDropdown: false }">
             <label class="text-gray-400 text-sm whitespace-nowrap">Add to Album:</label>
             <div class="relative flex-1">
-                <select wire:model="selectedAlbumId"
-                    class="w-full bg-[#2a2a2a] text-white rounded-lg border border-gray-700 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none cursor-pointer">
-                    <option value="">Single (No Album)</option>
-                    @foreach($albums as $album)
-                    <option value="{{ $album->id }}">{{ $album->title }}{{ $album->artist?->name ? ' - ' .
-                        $album->artist->name : '' }}</option>
-                    @endforeach
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                @if($selectedAlbum)
+                {{-- Selected Album Display --}}
+                <div class="flex items-center gap-3 bg-[#2a2a2a] rounded-lg px-4 py-2.5 border border-gray-700">
+                    <img src="{{ $selectedAlbum->cover_url }}" class="w-10 h-10 rounded object-cover">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white font-medium truncate">{{ $selectedAlbum->title }}</p>
+                        <p class="text-gray-400 text-sm truncate">{{ $selectedAlbum->artist_name }}</p>
+                    </div>
+                    <button type="button" wire:click="clearAlbum" class="text-gray-400 hover:text-red-400 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
+                @else
+                {{-- Search Input --}}
+                <input type="text" wire:model.live.debounce.300ms="albumSearch" @focus="showAlbumDropdown = true"
+                    @click.away="showAlbumDropdown = false"
+                    placeholder="Search for an album or leave empty for Single..."
+                    class="w-full bg-[#2a2a2a] text-white rounded-lg border border-gray-700 px-4 py-2.5 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+
+                {{-- Album Suggestions --}}
+                @if(count($albumSuggestions) > 0)
+                <div x-show="showAlbumDropdown" x-cloak
+                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-60 overflow-y-auto">
+                    @foreach($albumSuggestions as $suggestion)
+                    <button type="button" wire:click="selectAlbum({{ $suggestion['id'] }})"
+                        @click="showAlbumDropdown = false"
+                        class="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#383838] transition text-left">
+                        <img src="{{ $suggestion['cover'] }}" class="w-10 h-10 rounded object-cover">
+                        <div class="min-w-0">
+                            <p class="text-white font-medium truncate">{{ $suggestion['title'] }}</p>
+                            <p class="text-gray-400 text-sm truncate">{{ $suggestion['artist'] }}</p>
+                        </div>
+                    </button>
+                    @endforeach
+                </div>
+                @endif
+                @endif
             </div>
         </div>
 

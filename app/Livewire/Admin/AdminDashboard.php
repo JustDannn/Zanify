@@ -24,6 +24,16 @@ class AdminDashboard extends Component
         'album_id' => null,
     ];
     public $editCover = null; // Separate property for cover upload
+    
+    // Artist search for edit modal
+    public string $editArtistSearch = '';
+    public $editArtistSuggestions = [];
+    public array $editSelectedArtists = [];
+    
+    // Album search for edit modal
+    public string $editAlbumSearch = '';
+    public $editAlbumSuggestions = [];
+    public ?Album $editSelectedAlbum = null;
 
     // Delete Confirmation
     public $showDeleteModal = false;
@@ -47,11 +57,107 @@ class AdminDashboard extends Component
     protected $listeners = ['songUploaded' => '$refresh'];
 
     /**
+     * Search artists for edit modal
+     */
+    public function searchEditArtists(string $query)
+    {
+        if (strlen($query) < 1) {
+            $this->editArtistSuggestions = [];
+            return;
+        }
+
+        $this->editArtistSuggestions = Artist::where('name', 'like', '%' . $query . '%')
+            ->orderBy('name')
+            ->take(5)
+            ->get()
+            ->map(fn($artist) => [
+                'id' => $artist->id,
+                'name' => $artist->name,
+                'photo' => $artist->photo_url,
+            ])
+            ->toArray();
+    }
+
+    /**
+     * Select an artist for edit modal
+     */
+    public function selectEditArtist(int $artistId)
+    {
+        $artist = Artist::find($artistId);
+        if ($artist) {
+            // Check if not already selected
+            $alreadySelected = collect($this->editSelectedArtists)->contains('id', $artistId);
+            
+            if (!$alreadySelected) {
+                $this->editSelectedArtists[] = [
+                    'id' => $artist->id,
+                    'name' => $artist->name,
+                ];
+            }
+            
+            $this->editArtistSearch = '';
+            $this->editArtistSuggestions = [];
+        }
+    }
+
+    /**
+     * Remove an artist from edit selection
+     */
+    public function removeEditArtist(int $index)
+    {
+        if (isset($this->editSelectedArtists[$index])) {
+            unset($this->editSelectedArtists[$index]);
+            $this->editSelectedArtists = array_values($this->editSelectedArtists);
+        }
+    }
+
+    /**
+     * Search albums for edit modal
+     */
+    public function searchEditAlbums(string $query)
+    {
+        if (strlen($query) < 1) {
+            $this->editAlbumSuggestions = [];
+            return;
+        }
+
+        $this->editAlbumSuggestions = Album::where('title', 'like', '%' . $query . '%')
+            ->orderBy('title')
+            ->take(5)
+            ->get();
+    }
+
+    /**
+     * Select album for edit modal
+     */
+    public function selectEditAlbum(int $albumId)
+    {
+        $album = Album::find($albumId);
+        if ($album) {
+            $this->editSelectedAlbum = $album;
+            $this->editForm['album_id'] = $album->id;
+            $this->editAlbumSearch = '';
+            $this->editAlbumSuggestions = [];
+        }
+    }
+
+    /**
+     * Clear selected album in edit modal
+     */
+    public function clearEditAlbum()
+    {
+        $this->editSelectedAlbum = null;
+        $this->editForm['album_id'] = null;
+        $this->editAlbumSearch = '';
+        $this->editAlbumSuggestions = [];
+    }
+
+    /**
      * Open edit modal for a song
      */
     public function editSong($songId)
     {
-        $song = Song::find($songId);
+        $song = Song::with(['artists', 'album'])->find($songId);
         if (!$song) return;
 
         $this->editingSong = $song;
@@ -62,6 +168,25 @@ class AdminDashboard extends Component
             'album_id' => $song->album_id,
         ];
         $this->editCover = null;
+        
+        // Load selected artists
+        $this->editSelectedArtists = $song->artists->map(fn($artist) => [
+            'id' => $artist->id,
+            'name' => $artist->name,
+        ])->toArray();
+        $this->editArtistSearch = '';
+        $this->editArtistSuggestions = [];
+        
+        // Load selected album
+        if ($song->album) {
+            $this->editSelectedAlbum = $song->album;
+            $this->editAlbumSearch = '';
+        } else {
+            $this->editSelectedAlbum = null;
+            $this->editAlbumSearch = '';
+        }
+        $this->editAlbumSuggestions = [];
+        
         $this->showEditModal = true;
     }
 
@@ -75,11 +200,14 @@ class AdminDashboard extends Component
         if (!$this->editingSong) return;
 
         try {
+            // Build artist_name from selected artists for display purposes
+            $artistNameDisplay = collect($this->editSelectedArtists)->pluck('name')->implode(', ');
+            
             $updateData = [
                 'title' => $this->editForm['title'],
-                'artist_name' => $this->editForm['artist_name'],
+                'artist_name' => $artistNameDisplay,
                 'release_date' => $this->editForm['release_date'] ?: null,
-                'album_id' => $this->editForm['album_id'] ?: null,
+                'album_id' => $this->editSelectedAlbum?->id,
             ];
 
             // Handle cover upload
@@ -108,17 +236,12 @@ class AdminDashboard extends Component
 
             $this->editingSong->update($updateData);
 
-            // Handle artist relation (create if not exists)
-            if ($this->editForm['artist_name']) {
-                $artistNames = array_map('trim', explode(',', $this->editForm['artist_name']));
-                $artistIds = [];
-                
-                foreach ($artistNames as $name) {
-                    $artist = Artist::firstOrCreate(['name' => $name]);
-                    $artistIds[] = $artist->id;
-                }
-                
+            // Sync artist relations from selected artists
+            if (!empty($this->editSelectedArtists)) {
+                $artistIds = collect($this->editSelectedArtists)->pluck('id')->toArray();
                 $this->editingSong->artists()->sync($artistIds);
+            } else {
+                $this->editingSong->artists()->detach();
             }
 
             session()->flash('success', 'Song updated successfully!');
@@ -138,6 +261,16 @@ class AdminDashboard extends Component
         $this->editingSong = null;
         $this->editCover = null;
         $this->editForm = ['title' => '', 'artist_name' => '', 'release_date' => '', 'album_id' => null];
+        
+        // Reset artist search
+        $this->editArtistSearch = '';
+        $this->editArtistSuggestions = [];
+        $this->editSelectedArtists = [];
+        
+        // Reset album search
+        $this->editAlbumSearch = '';
+        $this->editAlbumSuggestions = [];
+        $this->editSelectedAlbum = null;
     }
 
     /**

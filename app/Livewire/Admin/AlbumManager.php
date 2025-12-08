@@ -25,6 +25,11 @@ class AlbumManager extends Component
     public $createCover = null;
     public $selectedSongs = [];
     public $uploadError = null;
+    
+    // Artist search for create
+    public string $createArtistSearch = '';
+    public $createArtistSuggestions = [];
+    public ?Artist $createSelectedArtist = null;
 
     // Edit Album Modal
     public $showEditModal = false;
@@ -37,6 +42,11 @@ class AlbumManager extends Component
     ];
     public $editCover = null;
     public $editSelectedSongs = [];
+    
+    // Artist search for edit
+    public string $editArtistSearch = '';
+    public $editArtistSuggestions = [];
+    public ?Artist $editSelectedArtist = null;
 
     // Delete Confirmation
     public $showDeleteModal = false;
@@ -103,6 +113,88 @@ class AlbumManager extends Component
     }
 
     /**
+     * Search artists for create form
+     */
+    public function updatedCreateArtistSearch($value)
+    {
+        if (strlen($value) < 1) {
+            $this->createArtistSuggestions = [];
+            return;
+        }
+
+        $this->createArtistSuggestions = Artist::where('name', 'like', '%' . $value . '%')
+            ->orderBy('name')
+            ->take(5)
+            ->get();
+    }
+
+    /**
+     * Select artist for create form
+     */
+    public function selectCreateArtist(int $artistId)
+    {
+        $artist = Artist::find($artistId);
+        if ($artist) {
+            $this->createSelectedArtist = $artist;
+            $this->createForm['artist_name'] = $artist->name;
+            $this->createArtistSearch = $artist->name;
+            $this->createArtistSuggestions = [];
+        }
+    }
+
+    /**
+     * Clear selected artist for create
+     */
+    public function clearCreateArtist()
+    {
+        $this->createSelectedArtist = null;
+        $this->createForm['artist_name'] = '';
+        $this->createArtistSearch = '';
+        $this->createArtistSuggestions = [];
+    }
+
+    /**
+     * Search artists for edit form
+     */
+    public function updatedEditArtistSearch($value)
+    {
+        if (strlen($value) < 1) {
+            $this->editArtistSuggestions = [];
+            return;
+        }
+
+        $this->editArtistSuggestions = Artist::where('name', 'like', '%' . $value . '%')
+            ->orderBy('name')
+            ->take(5)
+            ->get();
+    }
+
+    /**
+     * Select artist for edit form
+     */
+    public function selectEditArtist(int $artistId)
+    {
+        $artist = Artist::find($artistId);
+        if ($artist) {
+            $this->editSelectedArtist = $artist;
+            $this->editForm['artist_name'] = $artist->name;
+            $this->editArtistSearch = $artist->name;
+            $this->editArtistSuggestions = [];
+        }
+    }
+
+    /**
+     * Clear selected artist for edit
+     */
+    public function clearEditArtist()
+    {
+        $this->editSelectedArtist = null;
+        $this->editForm['artist_name'] = '';
+        $this->editArtistSearch = '';
+        $this->editArtistSuggestions = [];
+    }
+
+    /**
      * Open create album modal
      */
     public function openCreateModal()
@@ -125,6 +217,9 @@ class AlbumManager extends Component
         $this->createCover = null;
         $this->selectedSongs = [];
         $this->uploadError = null;
+        $this->createArtistSearch = '';
+        $this->createArtistSuggestions = [];
+        $this->createSelectedArtist = null;
     }
 
     /**
@@ -150,9 +245,11 @@ class AlbumManager extends Component
         ]);
 
         try {
-            // Handle artist
+            // Handle artist - use selected artist or create new one
             $artistId = null;
-            if ($this->createForm['artist_name']) {
+            if ($this->createSelectedArtist) {
+                $artistId = $this->createSelectedArtist->id;
+            } elseif ($this->createForm['artist_name']) {
                 $artist = Artist::firstOrCreate(['name' => $this->createForm['artist_name']]);
                 $artistId = $artist->id;
             }
@@ -197,7 +294,7 @@ class AlbumManager extends Component
      */
     public function editAlbum($albumId)
     {
-        $album = Album::with('songs')->find($albumId);
+        $album = Album::with(['songs', 'artist'])->find($albumId);
         if (!$album) return;
 
         $this->editingAlbum = $album;
@@ -209,6 +306,17 @@ class AlbumManager extends Component
         ];
         $this->editCover = null;
         $this->editSelectedSongs = $album->songs->pluck('id')->toArray();
+        
+        // Set artist search state
+        if ($album->artist) {
+            $this->editSelectedArtist = $album->artist;
+            $this->editArtistSearch = $album->artist->name;
+        } else {
+            $this->editSelectedArtist = null;
+            $this->editArtistSearch = '';
+        }
+        $this->editArtistSuggestions = [];
+        
         $this->showEditModal = true;
     }
 
@@ -228,9 +336,11 @@ class AlbumManager extends Component
         if (!$this->editingAlbum) return;
 
         try {
-            // Handle artist
+            // Handle artist - use selected artist or create new one
             $artistId = null;
-            if ($this->editForm['artist_name']) {
+            if ($this->editSelectedArtist) {
+                $artistId = $this->editSelectedArtist->id;
+            } elseif ($this->editForm['artist_name']) {
                 $artist = Artist::firstOrCreate(['name' => $this->editForm['artist_name']]);
                 $artistId = $artist->id;
             }
