@@ -45,9 +45,11 @@ class User extends Authenticatable
     {
         if ($this->hasLiked($song)) {
             $this->likedSongs()->detach($song->id);
+            $song->decrement('save_count'); // Decrease saves when unliked
             return false;
         } else {
             $this->likedSongs()->attach($song->id);
+            $song->increment('save_count'); // Increase saves when liked
             return true;
         }
     }
@@ -67,11 +69,24 @@ class User extends Authenticatable
      */
     public function recordPlay(Song $song): void
     {
+        // Check if user already played this song before (for listeners count)
+        $hasPlayedBefore = $this->recentlyPlayed()
+            ->where('song_id', $song->id)
+            ->exists();
+        
         // Remove existing entry if exists (to update played_at)
         $this->recentlyPlayed()->detach($song->id);
         
         // Add new entry with current timestamp
         $this->recentlyPlayed()->attach($song->id, ['played_at' => now()]);
+        
+        // Increment play count (every play)
+        $song->increment('play_count');
+        
+        // Increment listeners count only if this is first time user plays this song
+        if (!$hasPlayedBefore) {
+            $song->increment('listeners');
+        }
         
         // Delete entries older than 7 days
         \DB::table('recently_played')

@@ -65,7 +65,7 @@ return [
 
     'temporary_file_upload' => [
         'disk' => 'local',        // Example: 'local', 's3'              | Default: 'default'
-        'rules' => null,       // Validation handled in component rules | Default: ['required', 'file', 'max:12288'] (12MB)
+        'rules' => ['required', 'file', 'max:102400'],       // 100MB max | Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => 'tmp-upload',   // Example: 'tmp'                      | Default: 'livewire-tmp'
         'middleware' => null,  // Example: 'throttle:5,1'             | Default: 'throttle:60,1'
         'preview_mimes' => [   // Supported file types for temporary pre-signed file URLs...
