@@ -67,12 +67,16 @@
                         <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
                     </svg>
                 </button>
-                {{-- Repeat --}}
-                <button class="text-gray-400 hover:text-white transition" :class="{ 'text-green-500': repeat }"
-                    @click="repeat = !repeat">
+                {{-- Repeat - 3 states: off, all (queue), one (single song) --}}
+                <button class="text-gray-400 hover:text-white transition relative"
+                    :class="{ 'text-green-500': repeatMode !== 'off' }" @click="toggleRepeat()">
+                    {{-- Repeat icon --}}
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
                     </svg>
+                    {{-- "1" indicator for repeat one mode --}}
+                    <span x-show="repeatMode === 'one'"
+                        class="absolute -top-1 -right-1 text-[10px] font-bold text-green-500">1</span>
                 </button>
             </div>
             {{-- Progress Bar --}}
@@ -155,7 +159,7 @@
             previousVolume: 70,
             liked: false,
             shuffle: false,
-            repeat: false,
+            repeatMode: 'off', // 'off', 'all' (circular queue), 'one' (single song)
             title: null,
             artist: null,
             cover: null,
@@ -168,6 +172,16 @@
                     if (this.$refs.audio) {
                         this.$refs.audio.volume = this.volume / 100;
                     }
+                });
+
+                // Listen for repeat mode changes from Livewire
+                Livewire.on('repeat-mode-changed', (data) => {
+                    this.repeatMode = data.mode || data[0]?.mode || 'off';
+                });
+
+                // Listen for playback ended (no more songs)
+                Livewire.on('playback-ended', () => {
+                    this.isPlaying = false;
                 });
             },
 
@@ -260,20 +274,39 @@
                 if (this.currentTime > 3) {
                     this.$refs.audio.currentTime = 0;
                 } else {
-                    // Otherwise, play previous song from history
+                    // Otherwise, play previous song from history (traverse prev pointer)
                     Livewire.dispatch('request-previous-song');
                 }
             },
 
+            /**
+             * Toggle repeat mode: off -> all -> one -> off
+             * - off: no repeat
+             * - all: repeat entire queue/playlist (circular doubly linked list)
+             * - one: repeat current song only
+             */
+            toggleRepeat() {
+                const modes = ['off', 'all', 'one'];
+                const currentIndex = modes.indexOf(this.repeatMode);
+                const nextIndex = (currentIndex + 1) % modes.length;
+                this.repeatMode = modes[nextIndex];
+
+                // Sync with Livewire Queue component
+                Livewire.dispatch('toggle-repeat');
+            },
+
             handleEnded() {
-                if (this.repeat) {
+                // Repeat One: loop current song
+                if (this.repeatMode === 'one') {
                     this.$refs.audio.currentTime = 0;
                     this.$refs.audio.play();
-                } else {
-                    this.isPlaying = false;
-                    // Request next song from queue
-                    Livewire.dispatch('request-next-song');
+                    return;
                 }
+
+                // For 'off' and 'all' modes, request next song
+                // Queue component handles circular logic for 'all' mode
+                this.isPlaying = false;
+                Livewire.dispatch('request-next-song');
             },
 
             formatTime(seconds) {
