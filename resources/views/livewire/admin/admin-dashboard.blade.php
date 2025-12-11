@@ -55,9 +55,9 @@
 
                             <!-- Modal Box -->
                             <div x-show="openEditSongs" x-transition
-                                class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-y-auto py-4">
+                                class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-y-auto scrollbar-hide py-4">
                                 <div @click.stop
-                                    class="w-[900px] max-h-[85vh] overflow-y-auto overflow-x-visible bg-[#0e0e0e] rounded-2xl p-8 shadow-xl border border-white/10 pointer-events-auto">
+                                    class="w-[900px] max-h-[85vh] overflow-y-auto scrollbar-hide overflow-x-visible bg-[#0e0e0e] rounded-2xl p-8 shadow-xl border border-white/10 pointer-events-auto">
 
                                     <!-- HEADER -->
                                     <div class="flex justify-between items-center mb-6">
@@ -294,7 +294,7 @@
                                 {{-- Artist Suggestions Dropdown --}}
                                 @if(!empty($editArtistSuggestions))
                                 <div x-show="showSuggestions" x-cloak
-                                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto">
+                                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto scrollbar-hide">
                                     @foreach($editArtistSuggestions as $suggestion)
                                     <button type="button" wire:click="selectEditArtist({{ $suggestion['id'] }})"
                                         @click="searchText = ''; showSuggestions = false"
@@ -371,7 +371,7 @@
                                 {{-- Album Suggestions Dropdown --}}
                                 @if(count($editAlbumSuggestions) > 0)
                                 <div x-show="showAlbumSuggestions" x-cloak
-                                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto">
+                                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto scrollbar-hide">
                                     @foreach($editAlbumSuggestions as $album)
                                     <button type="button" wire:click="selectEditAlbum({{ $album->id }})"
                                         @click="albumSearchText = ''; showAlbumSuggestions = false"

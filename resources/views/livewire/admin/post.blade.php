@@ -205,7 +205,7 @@
                             {{-- Artist Suggestions Dropdown --}}
                             @if(!empty($song['artist_suggestions']))
                             <div x-show="showSuggestions" x-cloak
-                                class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto">
+                                class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-48 overflow-y-auto scrollbar-hide">
                                 @foreach($song['artist_suggestions'] as $suggestion)
                                 <button type="button" wire:click="selectArtist({{ $index }}, {{ $suggestion['id'] }})"
                                     @click="searchText = ''; showSuggestions = false"
@@ -291,7 +291,7 @@
                 {{-- Album Suggestions --}}
                 @if(count($albumSuggestions) > 0)
                 <div x-show="showAlbumDropdown" x-cloak
-                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-60 overflow-y-auto">
+                    class="absolute z-50 w-full mt-1 bg-[#282828] rounded-lg shadow-xl border border-gray-700 overflow-hidden max-h-60 overflow-y-auto scrollbar-hide">
                     @foreach($albumSuggestions as $suggestion)
                     <button type="button" wire:click="selectAlbum({{ $suggestion['id'] }})"
                         @click="showAlbumDropdown = false"

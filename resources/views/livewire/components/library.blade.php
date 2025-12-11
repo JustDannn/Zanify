@@ -28,7 +28,7 @@
     </div>
 
     {{-- LIST --}}
-    <div class="overflow-y-auto flex-1 px-2">
+    <div class="overflow-y-auto scrollbar-hide flex-1 px-2">
 
         @foreach ($items as $item)
         <a href="{{ $item['route'] ?? '#' }}"

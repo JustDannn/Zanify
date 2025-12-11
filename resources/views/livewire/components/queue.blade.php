@@ -26,7 +26,7 @@
             </div>
         </div>
 
-        <div class="overflow-y-auto" style="max-height: calc(100vh - 60px);">
+        <div class="overflow-y-auto scrollbar-hide" style="max-height: calc(100vh - 60px);">
             {{-- Now Playing --}}
             @if($currentSong)
             <div class="px-4 py-3 border-b border-[#282828]">

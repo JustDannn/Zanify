@@ -80,9 +80,10 @@
         <div class="fixed inset-0 bg-black/70" wire:click="closeCreateModal"></div>
 
         {{-- Modal Box --}}
-        <div class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-y-auto py-8">
+        <div
+            class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-y-auto scrollbar-hide py-8">
             <div
-                class="w-[700px] max-h-[90vh] overflow-y-auto bg-[#0e0e0e] rounded-2xl p-6 shadow-xl border border-white/10 pointer-events-auto">
+                class="w-[700px] max-h-[90vh] overflow-y-auto scrollbar-hide bg-[#0e0e0e] rounded-2xl p-6 shadow-xl border border-white/10 pointer-events-auto">
                 <h3 class="text-xl text-white font-semibold mb-6">Create New Album</h3>
 
                 {{-- Upload Error --}}
@@ -192,7 +193,7 @@
                                 {{-- Suggestions Dropdown --}}
                                 @if(count($createArtistSuggestions) > 0)
                                 <div x-show="open"
-                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg overflow-hidden shadow-xl max-h-48 overflow-y-auto">
+                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg overflow-hidden shadow-xl max-h-48 overflow-y-auto scrollbar-hide">
                                     @foreach($createArtistSuggestions as $artist)
                                     <button type="button" wire:click="selectCreateArtist({{ $artist->id }})"
                                         @click="open = false; searchText = ''"
@@ -250,7 +251,8 @@
                     {{-- Song Selection --}}
                     <div class="mt-6">
                         <label class="block text-gray-400 text-sm mb-3">Add Songs to Album (Optional)</label>
-                        <div class="bg-[#1a1a1a] rounded-lg border border-gray-700 max-h-48 overflow-y-auto">
+                        <div
+                            class="bg-[#1a1a1a] rounded-lg border border-gray-700 max-h-48 overflow-y-auto scrollbar-hide">
                             @forelse($availableSongs as $song)
                             <label
                                 class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-gray-800 last:border-0">
@@ -297,9 +299,10 @@
         <div class="fixed inset-0 bg-black/70" wire:click="closeEditModal"></div>
 
         {{-- Modal Box --}}
-        <div class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-y-auto py-8">
+        <div
+            class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-y-auto scrollbar-hide py-8">
             <div
-                class="w-[700px] max-h-[90vh] overflow-y-auto bg-[#0e0e0e] rounded-2xl p-6 shadow-xl border border-white/10 pointer-events-auto">
+                class="w-[700px] max-h-[90vh] overflow-y-auto scrollbar-hide bg-[#0e0e0e] rounded-2xl p-6 shadow-xl border border-white/10 pointer-events-auto">
                 <h3 class="text-xl text-white font-semibold mb-6">Edit Album</h3>
 
                 <form wire:submit.prevent="updateAlbum">
@@ -389,7 +392,7 @@
                                 {{-- Suggestions Dropdown --}}
                                 @if(count($editArtistSuggestions) > 0)
                                 <div x-show="open"
-                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg overflow-hidden shadow-xl max-h-48 overflow-y-auto">
+                                    class="absolute z-50 w-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-lg overflow-hidden shadow-xl max-h-48 overflow-y-auto scrollbar-hide">
                                     @foreach($editArtistSuggestions as $artist)
                                     <button type="button" wire:click="selectEditArtist({{ $artist->id }})"
                                         @click="open = false; searchText = ''"
@@ -446,7 +449,8 @@
                     {{-- Song Selection --}}
                     <div class="mt-6">
                         <label class="block text-gray-400 text-sm mb-3">Songs in Album</label>
-                        <div class="bg-[#1a1a1a] rounded-lg border border-gray-700 max-h-48 overflow-y-auto">
+                        <div
+                            class="bg-[#1a1a1a] rounded-lg border border-gray-700 max-h-48 overflow-y-auto scrollbar-hide">
                             @forelse($allSongs as $song)
                             <label
                                 class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-gray-800 last:border-0">

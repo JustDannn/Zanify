@@ -3,43 +3,89 @@
 namespace App\Livewire\Components;
 
 use Livewire\Component;
+use App\Models\Song;
+use App\Models\Artist;
+use App\Models\Album;
+use Illuminate\Support\Facades\Auth;
 
 class MixSection extends Component
 {
-    // Data dummy untuk kartu Daily Mix
-    public $mixes = [
-        [
-            'id' => 1,
-            'title' => 'Reality Club, Hindia, Perunggu and more',
-            'image' => 'https://picsum.photos/id/1018/300/300',
-            'mix_number' => '01',
-        ],
-        [
-            'id' => 2,
-            'title' => 'Taylor Swift, Bruno Mars, Maroon 5 and...',
-            'image' => 'https://picsum.photos/id/1025/300/300',
-            'mix_number' => '02',
-        ],
-        [
-            'id' => 3,
-            'title' => 'Yorushika, Sawano Hiroyuki, Eve and...',
-            'image' => 'https://picsum.photos/id/1069/300/300',
-            'mix_number' => '03',
-        ],
-        [
-            'id' => 4,
-            'title' => '.Feast, Marcello Tahitoe, Nike Ardilla...',
-            'image' => 'https://picsum.photos/id/1024/300/300',
-            'mix_number' => '04',
-        ],
-        [
-            'id' => 5,
-            'title' => 'Conan Gray, Clairo, Men I Trust and more',
-            'image' => 'https://picsum.photos/id/1033/300/300',
-            'mix_number' => '05',
-        ],
-        // Tambahkan mix lain jika perlu
-    ];
+    public $mixes = [];
+    public $sectionTitle = 'Made For You';
+    public $userName = '';
+
+    public function mount()
+    {
+        $this->userName = Auth::check() ? Auth::user()->name : 'You';
+        $this->sectionTitle = 'Made For ' . $this->userName;
+        $this->generateDailyMixes();
+    }
+
+    /**
+     * Generate dynamic daily mixes based on available artists
+     */
+    private function generateDailyMixes()
+    {
+        $this->mixes = [];
+        
+        // Get artists with songs, grouped for mixes
+        $artists = Artist::withCount('songs')
+            ->having('songs_count', '>', 0)
+            ->orderByDesc('songs_count')
+            ->take(15)
+            ->get();
+        
+        if ($artists->isEmpty()) {
+            // Fallback to placeholder mixes
+            $this->mixes = $this->getPlaceholderMixes();
+            return;
+        }
+        
+        // Create up to 5 daily mixes, each with 3 artists
+        $mixNumber = 1;
+        $artistChunks = $artists->chunk(3);
+        
+        foreach ($artistChunks->take(5) as $chunk) {
+            $artistNames = $chunk->pluck('name')->toArray();
+            $firstArtist = $chunk->first();
+            
+            // Get a cover from one of the artist's songs
+            $coverSong = Song::whereHas('artists', function($q) use ($chunk) {
+                $q->whereIn('artists.id', $chunk->pluck('id'));
+            })->whereNotNull('cover')->first();
+            
+            $this->mixes[] = [
+                'id' => $mixNumber,
+                'title' => implode(', ', array_slice($artistNames, 0, 2)) . ' and more',
+                'image' => $coverSong?->cover_url ?? $firstArtist->photo_url,
+                'mix_number' => str_pad($mixNumber, 2, '0', STR_PAD_LEFT),
+                'artist_ids' => $chunk->pluck('id')->toArray(),
+            ];
+            
+            $mixNumber++;
+        }
+    }
+
+    /**
+     * Fallback placeholder mixes
+     */
+    private function getPlaceholderMixes()
+    {
+        return [
+            [
+                'id' => 1,
+                'title' => 'Your Daily Mix',
+                'image' => 'https://picsum.photos/seed/mix1/300/300',
+                'mix_number' => '01',
+            ],
+            [
+                'id' => 2,
+                'title' => 'Discover Weekly',
+                'image' => 'https://picsum.photos/seed/mix2/300/300',
+                'mix_number' => '02',
+            ],
+        ];
+    }
 
     public function render()
     {
