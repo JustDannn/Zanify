@@ -39,7 +39,7 @@
             <div class="flex items-center gap-4 mb-2">
                 {{-- Shuffle --}}
                 <button class="text-gray-400 hover:text-white transition" :class="{ 'text-green-500': shuffle }"
-                    @click="shuffle = !shuffle">
+                    @click="toggleShuffle()" title="Shuffle - Find similar songs">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path
                             d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
@@ -179,6 +179,11 @@
                     this.repeatMode = data.mode || data[0]?.mode || 'off';
                 });
 
+                // Listen for shuffle mode changes from Livewire
+                Livewire.on('shuffle-mode-changed', (data) => {
+                    this.shuffle = data.mode || data[0]?.mode || false;
+                });
+
                 // Listen for playback ended (no more songs)
                 Livewire.on('playback-ended', () => {
                     this.isPlaying = false;
@@ -293,6 +298,17 @@
 
                 // Sync with Livewire Queue component
                 Livewire.dispatch('toggle-repeat');
+            },
+
+            /**
+             * Toggle shuffle mode on/off
+             * When enabled, will find similar songs using fuzzy matching by artist
+             */
+            toggleShuffle() {
+                this.shuffle = !this.shuffle;
+                
+                // Sync with Livewire Queue component
+                Livewire.dispatch('toggle-shuffle');
             },
 
             handleEnded() {
