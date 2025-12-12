@@ -6,7 +6,7 @@ use App\Models\Song;
 use App\Models\Album;
 use App\Models\Artist;
 use Livewire\Component;
-use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Illuminate\Support\Facades\Auth;
 use App\Livewire\Traits\WithPlaylistActions;
 
@@ -14,19 +14,27 @@ class SearchResults extends Component
 {
     use WithPlaylistActions;
 
+    #[Url(as: 'q')]
     public string $query = '';
+    
     public bool $isSearching = false;
     public $songs = [];
     public $albums = [];
     public $artists = [];
     public $topResult = null;
 
-    #[On('search-updated')]
-    public function updateSearch($query)
+    public function mount()
     {
-        $this->query = $query;
-        
-        if (strlen($query) < 1) {
+        // Perform search if query exists in URL
+        if (!empty($this->query)) {
+            $this->isSearching = true;
+            $this->performSearch();
+        }
+    }
+
+    public function updatedQuery()
+    {
+        if (strlen($this->query) < 1) {
             $this->isSearching = false;
             $this->songs = [];
             $this->albums = [];

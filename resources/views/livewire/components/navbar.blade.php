@@ -1,6 +1,5 @@
 <div class="sticky top-0 z-50">
-    <div x-data="{ open: false }" @click.outside="open = false"
-        class="w-full bg-black text-white px-4 py-3 flex items-center gap-3 relative justify-between">
+    <div class="w-full bg-black text-white px-4 py-3 flex items-center gap-3 relative justify-between">
 
         {{-- LEFT SECTION --}}
         <div class="flex items-center gap-3 flex-1">
@@ -16,45 +15,25 @@
 
             {{-- SEARCH --}}
             <div class="relative flex-1 max-w-lg">
-                <div class="flex items-center bg-[#161616] rounded-full px-4 py-2">
+                <form wire:submit="goToSearch" class="flex items-center bg-[#161616] rounded-full px-4 py-2">
                     <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z" />
                     </svg>
 
-                    <input wire:model.live.debounce.150ms="query" @focus="open = true" id="global-search" type="text"
+                    <input wire:model.live.debounce.300ms="query" id="global-search" type="text"
                         placeholder="What do you want to play?"
                         class="bg-transparent w-full focus:outline-none text-gray-200" />
 
                     @if($query)
-                    <button wire:click="clearSearch" class="text-gray-400 hover:text-white transition">
+                    <button type="button" wire:click="clearSearch" class="text-gray-400 hover:text-white transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                     @endif
-                </div>
-
-                {{-- DROPDOWN SUGGESTIONS --}}
-                @if(!empty($suggestions))
-                <div
-                    class="absolute mt-2 w-full bg-[#282828] rounded-xl shadow-2xl border border-gray-700 overflow-hidden z-50">
-                    @foreach($suggestions as $item)
-                    <div wire:click="selectSuggestion('{{ $item['type'] }}', {{ $item['id'] }})"
-                        class="flex items-center gap-3 px-4 py-2 hover:bg-[#3e3e3e] cursor-pointer transition">
-                        <img src="{{ $item['cover'] }}" alt="{{ $item['title'] }}"
-                            class="w-10 h-10 {{ $item['type'] === 'album' ? 'rounded' : 'rounded' }} object-cover bg-gray-700">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-white font-medium truncate">{{ $item['title'] }}</p>
-                            <p class="text-gray-400 text-sm truncate">
-                                <span class="capitalize">{{ $item['type'] }}</span> • {{ $item['subtitle'] }}
-                            </p>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-                @endif
+                </form>
             </div>
 
             {{-- Icon Recent - Link to History Page --}}
@@ -97,7 +76,8 @@
                     <a class="block px-4 py-2 hover:bg-gray-800 transition">Profile</a>
                     <a class="block px-4 py-2 hover:bg-gray-800 transition">Settings</a>
                     @if(session('is_admin'))
-                    <a href="{{ route('admin.admin-dashboard') }}" wire:navigate class="block px-4 py-2 hover:bg-gray-800 transition">
+                    <a href="{{ route('admin.admin-dashboard') }}" wire:navigate
+                        class="block px-4 py-2 hover:bg-gray-800 transition">
                         Admin Dashboard
                     </a>
                     @endif

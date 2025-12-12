@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class Song extends Model
 {
@@ -71,42 +71,38 @@ class Song extends Model
     }
 
     /**
-     * Get the cover URL
-     * If song belongs to an album, use album cover instead
+     * Build Azure URL directly without checking existence (FAST)
+     */
+    private function buildAzureUrl(string $path): string
+    {
+        $endpoint = env('AZURE_STORAGE_ENDPOINT', 'https://zanify.blob.core.windows.net');
+        $container = env('AZURE_STORAGE_CONTAINER', 'zanifycontainer');
+        return rtrim($endpoint, '/') . '/' . $container . '/' . ltrim($path, '/');
+    }
+
+    /**
+     * Get the cover URL - OPTIMIZED: No Azure exists() check
      */
     public function getCoverUrlAttribute(): string
     {
         // If song belongs to an album, use album's cover
-        if ($this->album_id && $this->album && $this->album->cover) {
-            return $this->album->cover_url;
+        if ($this->album_id) {
+            // Load album if not already loaded
+            $album = $this->relationLoaded('album') ? $this->album : $this->album()->first();
+            if ($album?->cover) {
+                return $album->cover_url;
+            }
         }
 
-        // Otherwise use song's own cover
+        // Use song's own cover
         if ($this->cover) {
-            // Check if it's a full URL already
+            // Full URL - return as-is
             if (str_starts_with($this->cover, 'http')) {
                 return $this->cover;
             }
             
-            // Try Azure storage first - generate proper Azure URL
-            try {
-                if (Storage::disk('azure')->exists($this->cover)) {
-                    // Build Azure URL manually
-                    $endpoint = config('filesystems.disks.azure.endpoint') ?? env('AZURE_STORAGE_ENDPOINT');
-                    $container = config('filesystems.disks.azure.container') ?? env('AZURE_STORAGE_CONTAINER', 'music');
-                    return rtrim($endpoint, '/') . '/' . $container . '/' . $this->cover;
-                }
-            } catch (\Exception $e) {
-                // Azure not available, try local
-            }
-            
-            // Local storage
-            if (Storage::disk('public')->exists($this->cover)) {
-                return Storage::disk('public')->url($this->cover);
-            }
-            
-            // Fallback - return as-is
-            return Storage::url($this->cover);
+            // Build Azure URL directly (no exists check!)
+            return $this->buildAzureUrl($this->cover);
         }
         
         // Default placeholder
@@ -114,7 +110,7 @@ class Song extends Model
     }
 
     /**
-     * Get the audio file URL from Azure Blob Storage
+     * Get the audio file URL - OPTIMIZED
      */
     public function getAudioUrlAttribute(): ?string
     {
@@ -122,18 +118,12 @@ class Song extends Model
             return null;
         }
 
-        // Check if it's a full URL already
+        // Full URL - return as-is
         if (str_starts_with($this->audio_path, 'http')) {
             return $this->audio_path;
         }
 
-        // Build Azure URL
-        try {
-            $endpoint = config('filesystems.disks.azure.endpoint') ?? env('AZURE_STORAGE_ENDPOINT');
-            $container = config('filesystems.disks.azure.container') ?? env('AZURE_STORAGE_CONTAINER', 'music');
-            return rtrim($endpoint, '/') . '/' . $container . '/' . $this->audio_path;
-        } catch (\Exception $e) {
-            return null;
-        }
+        // Build Azure URL directly
+        return $this->buildAzureUrl($this->audio_path);
     }
 }

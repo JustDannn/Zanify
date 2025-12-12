@@ -47,13 +47,9 @@ class Artist extends Model
                 return $this->photo;
             }
             
-            try {
-                $endpoint = config('filesystems.disks.azure.endpoint') ?? env('AZURE_STORAGE_ENDPOINT');
-                $container = config('filesystems.disks.azure.container') ?? env('AZURE_STORAGE_CONTAINER', 'music');
-                return rtrim($endpoint, '/') . '/' . $container . '/' . $this->photo;
-            } catch (\Exception $e) {
-                // Fallback
-            }
+            $endpoint = env('AZURE_STORAGE_ENDPOINT', 'https://zanify.blob.core.windows.net');
+            $container = env('AZURE_STORAGE_CONTAINER', 'zanifycontainer');
+            return rtrim($endpoint, '/') . '/' . $container . '/' . ltrim($this->photo, '/');
         }
         
         // Default placeholder - artist silhouette

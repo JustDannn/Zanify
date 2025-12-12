@@ -7,97 +7,135 @@ use App\Models\Song;
 use App\Models\Artist;
 use App\Models\Album;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Carbon;
 
 class HomeSections extends Component
 {
     public $sections = [];
+    public $recommendedStations = [];
 
     public function mount()
     {
         $this->loadSections();
+        $this->loadRecommendedStations();
     }
 
     /**
-     * Load all dynamic sections for home page
+     * Load all dynamic sections for home page - WITH CACHING
      */
     private function loadSections()
     {
-        $this->sections = [];
+        // Cache sections for 5 minutes
+        $this->sections = Cache::remember('home_sections', 300, function () {
+            $sections = [];
 
-        // 1. Popular Songs This Week
-        $this->sections[] = $this->getPopularSongsSection();
+            // 1. New Releases (Albums/Singles only)
+            $sections[] = $this->getNewReleasesSection();
 
-        // 2. New Releases
-        $this->sections[] = $this->getNewReleasesSection();
+            // 2. Featured Artists
+            $sections[] = $this->getFeaturedArtistsSection();
 
-        // 3. Featured Artists
-        $this->sections[] = $this->getFeaturedArtistsSection();
+            // 3. Albums to Explore
+            $sections[] = $this->getAlbumsSection();
 
-        // 4. Albums to Explore
-        $this->sections[] = $this->getAlbumsSection();
-
-        // 5. Based on your listening (for authenticated users)
-        if (Auth::check()) {
-            $recentSection = $this->getBasedOnListeningSection();
-            if ($recentSection) {
-                array_unshift($this->sections, $recentSection); // Add to beginning
-            }
-        }
-
-        // Filter out empty sections
-        $this->sections = array_filter($this->sections, fn($s) => !empty($s['items']));
+            // Filter out empty sections
+            return array_filter($sections, fn($s) => !empty($s['items']));
+        });
     }
 
     /**
-     * Popular songs this week
+     * Load recommended stations - WITH CACHING
      */
-    private function getPopularSongsSection(): array
+    private function loadRecommendedStations()
     {
-        $songs = Song::with(['artists', 'album'])
-            ->orderByDesc('play_count')
-            ->take(10)
-            ->get()
-            ->map(fn($song) => [
-                'id' => $song->id,
-                'title' => $song->title,
-                'subtitle' => $song->artist_display,
-                'image' => $song->cover_url,
-                'type' => 'song',
-                'play_count' => $song->play_count,
-            ])
-            ->toArray();
+        $userId = Auth::id() ?? 'guest';
+        
+        // Cache per user for 5 minutes
+        $this->recommendedStations = Cache::remember("stations_{$userId}", 300, function () {
+            $stations = [];
 
-        return [
-            'title' => 'Popular This Week',
-            'type' => 'songs',
-            'items' => $songs,
-        ];
+            // Get popular artists to create stations from
+            $popularArtists = Artist::withCount('songs')
+                ->whereHas('songs')
+                ->orderByDesc('songs_count')
+                ->take(10)
+                ->get();
+
+            // If user is logged in, prioritize artists from their listening history
+            if (Auth::check()) {
+                $recentArtists = Auth::user()->recentlyPlayed()
+                    ->with('artists')
+                    ->take(20)
+                    ->get()
+                    ->pluck('artists')
+                    ->flatten()
+                    ->unique('id')
+                    ->take(6);
+
+                if ($recentArtists->isNotEmpty()) {
+                    $popularArtists = $recentArtists->merge($popularArtists)->unique('id')->take(10);
+                }
+            }
+
+            foreach ($popularArtists->take(6) as $artist) {
+                $relatedArtistIds = Song::whereHas('artists', fn($q) => $q->where('artists.id', $artist->id))
+                    ->with('artists')
+                    ->get()
+                    ->pluck('artists')
+                    ->flatten()
+                    ->where('id', '!=', $artist->id)
+                    ->unique('id')
+                    ->pluck('id')
+                    ->take(5);
+
+                $relatedArtists = Artist::whereIn('id', $relatedArtistIds)->get();
+                
+                $withArtists = $relatedArtists->pluck('name')->take(3)->join(', ');
+                if ($relatedArtists->count() > 3) {
+                    $withArtists .= '...';
+                }
+
+                $stations[] = [
+                    'id' => $artist->id,
+                    'title' => $artist->name,
+                    'subtitle' => $withArtists ? 'With ' . $withArtists : 'Artist Radio',
+                    'image' => $artist->photo_url,
+                    'artist_ids' => $relatedArtistIds->prepend($artist->id)->toArray(),
+                ];
+            }
+            
+            return $stations;
+        });
     }
 
     /**
-     * New releases (recently added songs/albums)
+     * New releases - Albums & Singles only (not individual songs)
      */
     private function getNewReleasesSection(): array
     {
-        $songs = Song::with(['artists', 'album'])
+        $albums = Album::with('artist')
+            ->withCount('songs')
+            ->whereHas('songs')
             ->orderByDesc('created_at')
             ->take(10)
             ->get()
-            ->map(fn($song) => [
-                'id' => $song->id,
-                'title' => $song->title,
-                'subtitle' => $song->artist_display,
-                'image' => $song->cover_url,
-                'type' => 'song',
-                'is_new' => $song->created_at->diffInDays(now()) < 7,
+            ->map(fn($album) => [
+                'id' => $album->id,
+                'title' => $album->title,
+                'subtitle' => $album->artist->name ?? 'Various Artists',
+                'image' => $album->cover_url,
+                'type' => 'album',
+                'year' => $album->year ?? now()->year,
+                'is_new' => $album->created_at->diffInDays(now()) < 14,
+                'songs_count' => $album->songs_count,
             ])
             ->toArray();
 
         return [
             'title' => 'New Releases',
-            'type' => 'songs',
-            'items' => $songs,
+            'type' => 'albums',
+            'items' => $albums,
         ];
     }
 
@@ -137,6 +175,7 @@ class HomeSections extends Component
             ->withCount('songs')
             ->whereHas('songs')
             ->orderByDesc('created_at')
+            ->skip(10) // Skip the ones shown in New Releases
             ->take(8)
             ->get()
             ->map(fn($album) => [
@@ -157,49 +196,26 @@ class HomeSections extends Component
     }
 
     /**
-     * Based on user's recent listening
+     * Play a station (radio) - plays songs from selected artist and related artists
      */
-    private function getBasedOnListeningSection(): ?array
+    public function playStation(int $artistId, array $artistIds = [])
     {
-        if (!Auth::check()) return null;
-
-        $recentArtists = Auth::user()->recentlyPlayed()
-            ->with('artists')
-            ->take(5)
-            ->get()
-            ->pluck('artists')
-            ->flatten()
-            ->unique('id')
-            ->take(3);
-
-        if ($recentArtists->isEmpty()) return null;
-
-        // Get songs from similar artists
-        $artistIds = $recentArtists->pluck('id');
-        $artistNames = $recentArtists->pluck('name')->take(2)->join(' & ');
-
-        $songs = Song::with(['artists', 'album'])
-            ->whereHas('artists', fn($q) => $q->whereIn('artists.id', $artistIds))
-            ->whereNotIn('id', Auth::user()->recentlyPlayed()->pluck('songs.id'))
+        // Get songs from these artists
+        $songs = Song::whereHas('artists', fn($q) => $q->whereIn('artists.id', $artistIds))
             ->inRandomOrder()
-            ->take(10)
-            ->get()
-            ->map(fn($song) => [
-                'id' => $song->id,
-                'title' => $song->title,
-                'subtitle' => $song->artist_display,
-                'image' => $song->cover_url,
-                'type' => 'song',
-            ])
+            ->take(50)
+            ->pluck('id')
             ->toArray();
 
-        if (empty($songs)) return null;
-
-        return [
-            'title' => 'More Like ' . $artistNames,
-            'type' => 'songs',
-            'items' => $songs,
-        ];
+        if (!empty($songs)) {
+            $artist = Artist::find($artistId);
+            $this->dispatch('set-play-source', 
+                sourceName: ($artist->name ?? 'Artist') . ' Radio', 
+                songIds: $songs, 
+                startFromSongId: $songs[0]
+            );
+            $this->dispatch('play-song', songId: $songs[0]);
+        }
     }
 
     /**
@@ -215,6 +231,24 @@ class HomeSections extends Component
             );
         }
         $this->dispatch('play-song', songId: $songId);
+    }
+
+    /**
+     * Play all songs from an album
+     */
+    public function playAlbum(int $albumId)
+    {
+        $album = Album::with('songs')->find($albumId);
+        
+        if ($album && $album->songs->isNotEmpty()) {
+            $songIds = $album->songs->pluck('id')->toArray();
+            $this->dispatch('set-play-source', 
+                sourceName: $album->title, 
+                songIds: $songIds, 
+                startFromSongId: $songIds[0]
+            );
+            $this->dispatch('play-song', songId: $songIds[0]);
+        }
     }
 
     public function render()

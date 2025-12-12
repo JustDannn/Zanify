@@ -9,6 +9,7 @@ use App\Livewire\Components\RecentlyPlayed;
 use App\Livewire\Components\AlbumDetail;
 use App\Livewire\Components\ArtistDetail;
 use App\Livewire\Components\PlaylistDetail;
+use App\Livewire\Components\SearchResults;
 
 Route::get('/', function () {
     if (!Auth::check() && !session('is_admin')) {
@@ -18,6 +19,7 @@ Route::get('/', function () {
 })->name('home');
 Route::get('/login', Login::class)->name('login');
 Route::get('/register', Register::class)->name('register');
+Route::get('/search', SearchResults::class)->name('search');
 Route::get('/liked-songs', LikedSongs::class)->name('liked-songs');
 Route::get('/recently-played', RecentlyPlayed::class)->name('recently-played');
 Route::get('/album/{id}', AlbumDetail::class)->name('album');

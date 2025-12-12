@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Facades\Storage;
 
 class Album extends Model
 {
@@ -40,30 +39,28 @@ class Album extends Model
     }
 
     /**
-     * Get cover URL
+     * Build Azure URL directly (FAST - no HTTP call)
+     */
+    private function buildAzureUrl(string $path): string
+    {
+        $endpoint = env('AZURE_STORAGE_ENDPOINT', 'https://zanify.blob.core.windows.net');
+        $container = env('AZURE_STORAGE_CONTAINER', 'zanifycontainer');
+        return rtrim($endpoint, '/') . '/' . $container . '/' . ltrim($path, '/');
+    }
+
+    /**
+     * Get cover URL - OPTIMIZED: No Azure exists() check
      */
     public function getCoverUrlAttribute(): string
     {
         if ($this->cover) {
+            // Full URL - return as-is
             if (str_starts_with($this->cover, 'http')) {
                 return $this->cover;
             }
             
-            try {
-                if (Storage::disk('azure')->exists($this->cover)) {
-                    $endpoint = config('filesystems.disks.azure.endpoint') ?? env('AZURE_STORAGE_ENDPOINT');
-                    $container = config('filesystems.disks.azure.container') ?? env('AZURE_STORAGE_CONTAINER', 'music');
-                    return rtrim($endpoint, '/') . '/' . $container . '/' . $this->cover;
-                }
-            } catch (\Exception $e) {
-                // Azure not available
-            }
-            
-            if (Storage::disk('public')->exists($this->cover)) {
-                return Storage::disk('public')->url($this->cover);
-            }
-            
-            return Storage::url($this->cover);
+            // Build Azure URL directly (no exists check!)
+            return $this->buildAzureUrl($this->cover);
         }
         
         return 'https://via.placeholder.com/200x200/1a1a1a/666?text=Album';

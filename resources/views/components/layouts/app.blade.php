@@ -41,15 +41,9 @@
         @unless (Route::is('admin.admin-dashboard'))
         @livewire('components.library')
         @endunless
-        <main class="flex-1 overflow-y-auto bg-[#121212] scrollbar-hide" x-data="{ isSearching: false }"
-            @search-active.window="isSearching = $event.detail.active">
-            {{-- Search Results (shown when searching) --}}
-            <div x-show="isSearching" x-cloak class="min-h-full">
-                @livewire('components.search-results')
-            </div>
-
-            {{-- Main Content (hidden when searching) --}}
-            <div id="main-content" x-show="!isSearching" class="min-h-full">
+        <main class="flex-1 overflow-y-auto bg-[#121212] scrollbar-hide">
+            {{-- Main Content --}}
+            <div id="main-content" class="min-h-full">
                 {{ $slot }}
             </div>
         </main>
