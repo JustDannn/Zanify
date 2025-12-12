@@ -107,7 +107,7 @@ class HomeSections extends Component
     private function getFeaturedArtistsSection(): array
     {
         $artists = Artist::withCount('songs')
-            ->having('songs_count', '>', 0)
+            ->whereHas('songs')
             ->orderByDesc('songs_count')
             ->take(8)
             ->get()
@@ -135,7 +135,7 @@ class HomeSections extends Component
     {
         $albums = Album::with('artist')
             ->withCount('songs')
-            ->having('songs_count', '>', 0)
+            ->whereHas('songs')
             ->orderByDesc('created_at')
             ->take(8)
             ->get()

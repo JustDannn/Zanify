@@ -30,7 +30,7 @@ class MixSection extends Component
         
         // Get artists with songs, grouped for mixes
         $artists = Artist::withCount('songs')
-            ->having('songs_count', '>', 0)
+            ->whereHas('songs')
             ->orderByDesc('songs_count')
             ->take(15)
             ->get();
