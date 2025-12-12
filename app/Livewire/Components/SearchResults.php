@@ -92,12 +92,24 @@ class SearchResults extends Component
 
     public function playSong(int $songId)
     {
+        $song = $this->songs->firstWhere('id', $songId);
+        if (!$song) return;
+        
         // Set the source for autoplay from search results
         $songIds = $this->songs->pluck('id')->toArray();
         $this->dispatch('set-play-source', sourceName: 'Search Results', songIds: $songIds, startFromSongId: $songId);
         
-        // Dispatch to Player component
-        $this->dispatch('play-song', songId: $songId);
+        // Send full song data to avoid DB query in Player
+        $isLiked = Auth::check() ? Auth::user()->hasLiked($song) : false;
+        $this->dispatch('play-song-data', songData: [
+            'id' => $song->id,
+            'title' => $song->title,
+            'artist' => $song->artist_display,
+            'cover' => $song->cover_url,
+            'audioUrl' => $song->audio_url,
+            'duration' => $song->duration,
+            'isLiked' => $isLiked,
+        ]);
     }
 
     /**
@@ -105,11 +117,24 @@ class SearchResults extends Component
      */
     public function playAlbum(int $albumId)
     {
-        $album = Album::with('songs')->find($albumId);
+        $album = Album::with(['songs.artists'])->find($albumId);
         if ($album && $album->songs->isNotEmpty()) {
             $songIds = $album->songs->pluck('id')->toArray();
-            $this->dispatch('set-play-source', sourceName: $album->title, songIds: $songIds, startFromSongId: $songIds[0]);
-            $this->dispatch('play-song', songId: $songIds[0]);
+            $firstSong = $album->songs->first();
+            
+            $this->dispatch('set-play-source', sourceName: $album->title, songIds: $songIds, startFromSongId: $firstSong->id);
+            
+            // Send full song data
+            $isLiked = Auth::check() ? Auth::user()->hasLiked($firstSong) : false;
+            $this->dispatch('play-song-data', songData: [
+                'id' => $firstSong->id,
+                'title' => $firstSong->title,
+                'artist' => $firstSong->artist_display,
+                'cover' => $firstSong->cover_url ?? $album->cover_url,
+                'audioUrl' => $firstSong->audio_url,
+                'duration' => $firstSong->duration,
+                'isLiked' => $isLiked,
+            ]);
         }
     }
 
@@ -120,15 +145,29 @@ class SearchResults extends Component
     {
         $artist = Artist::find($artistId);
         if ($artist) {
-            $songs = Song::whereHas('artists', fn($q) => $q->where('artists.id', $artistId))
+            $songs = Song::with(['album', 'artists'])
+                ->whereHas('artists', fn($q) => $q->where('artists.id', $artistId))
                 ->orWhere('artist_name', $artist->name)
                 ->orderBy('play_count', 'desc')
                 ->get();
             
             if ($songs->isNotEmpty()) {
                 $songIds = $songs->pluck('id')->toArray();
-                $this->dispatch('set-play-source', sourceName: $artist->name, songIds: $songIds, startFromSongId: $songIds[0]);
-                $this->dispatch('play-song', songId: $songIds[0]);
+                $firstSong = $songs->first();
+                
+                $this->dispatch('set-play-source', sourceName: $artist->name, songIds: $songIds, startFromSongId: $firstSong->id);
+                
+                // Send full song data
+                $isLiked = Auth::check() ? Auth::user()->hasLiked($firstSong) : false;
+                $this->dispatch('play-song-data', songData: [
+                    'id' => $firstSong->id,
+                    'title' => $firstSong->title,
+                    'artist' => $firstSong->artist_display,
+                    'cover' => $firstSong->cover_url,
+                    'audioUrl' => $firstSong->audio_url,
+                    'duration' => $firstSong->duration,
+                    'isLiked' => $isLiked,
+                ]);
             }
         }
     }

@@ -83,13 +83,40 @@ class RecentlyPlayed extends Component
 
     public function playSong(int $songId)
     {
+        // Find the song data in our grouped structure
+        $songData = null;
+        foreach ($this->groupedSongs as $group) {
+            foreach ($group['songs'] as $song) {
+                if ($song['id'] === $songId) {
+                    $songData = $song;
+                    break 2;
+                }
+            }
+        }
+        
+        if (!$songData) return;
+        
         // Flatten all songs for autoplay source
         $allSongIds = collect($this->groupedSongs)
             ->flatMap(fn($group) => collect($group['songs'])->pluck('id'))
             ->toArray();
         
         $this->dispatch('set-play-source', sourceName: 'Recently Played', songIds: $allSongIds, startFromSongId: $songId);
-        $this->dispatch('play-song', songId: $songId);
+        
+        // We need to get the audio URL - load song from DB (but this is already loaded)
+        $song = Song::with('album')->find($songId);
+        if (!$song) return;
+        
+        $isLiked = Auth::check() ? Auth::user()->hasLiked($song) : false;
+        $this->dispatch('play-song-data', songData: [
+            'id' => $song->id,
+            'title' => $songData['title'],
+            'artist' => $songData['artist'],
+            'cover' => $songData['cover'],
+            'audioUrl' => $song->audio_url,
+            'duration' => $song->duration,
+            'isLiked' => $isLiked,
+        ]);
     }
 
     /**

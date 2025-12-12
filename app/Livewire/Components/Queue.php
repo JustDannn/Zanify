@@ -6,6 +6,7 @@ use App\Models\Song;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Queue Component using Doubly Linked List concept
@@ -50,10 +51,60 @@ class Queue extends Component
         $this->dispatch('repeat-mode-changed', mode: $this->repeatMode);
     }
 
+    /**
+     * Helper to format song data for queue/playback
+     */
+    private function formatSongData(Song $song, bool $includeAudio = false): array
+    {
+        $data = [
+            'id' => $song->id,
+            'title' => $song->title,
+            'artist' => $song->artist_display,
+            'cover' => $song->cover_url,
+            'duration' => $song->duration,
+            'duration_formatted' => $song->duration_formatted,
+        ];
+        
+        if ($includeAudio) {
+            $data['audioUrl'] = $song->audio_url;
+        }
+        
+        return $data;
+    }
+
+    /**
+     * Helper to dispatch song with full data (no DB query in Player)
+     */
+    private function dispatchPlaySong(array $songData)
+    {
+        // If we don't have audioUrl, we need to get it
+        if (!isset($songData['audioUrl'])) {
+            $song = Cache::remember("song_{$songData['id']}", 3600, function () use ($songData) {
+                return Song::with(['album', 'artists'])->find($songData['id']);
+            });
+            if ($song) {
+                $songData['audioUrl'] = $song->audio_url;
+                $songData['cover'] = $songData['cover'] ?? $song->cover_url;
+            }
+        }
+        
+        $isLiked = Auth::check() ? Auth::user()->hasLiked(Song::find($songData['id'])) : false;
+        
+        $this->dispatch('play-song-data', songData: [
+            'id' => $songData['id'],
+            'title' => $songData['title'],
+            'artist' => $songData['artist'],
+            'cover' => $songData['cover'],
+            'audioUrl' => $songData['audioUrl'] ?? '',
+            'duration' => $songData['duration'] ?? null,
+            'isLiked' => $isLiked,
+        ]);
+    }
+
     #[On('add-to-queue')]
     public function addToQueue(int $songId)
     {
-        $song = Song::with('artists')->find($songId);
+        $song = Song::with(['album', 'artists'])->find($songId);
         
         if (!$song) return;
 
@@ -64,13 +115,7 @@ class Queue extends Component
             return;
         }
 
-        $this->queue[] = [
-            'id' => $song->id,
-            'title' => $song->title,
-            'artist' => $song->artist_display,
-            'cover' => $song->cover_url,
-            'duration_formatted' => $song->duration_formatted,
-        ];
+        $this->queue[] = $this->formatSongData($song, true);
 
         // Show notification
         $this->dispatch('notify', message: "Added '{$song->title}' to queue!");
@@ -85,18 +130,12 @@ class Queue extends Component
     {
         $this->sourceName = $sourceName;
         
-        // Store all songs for circular repeat (originalSource)
+        // Store all songs for circular repeat (originalSource) - include audioUrl
         $this->originalSource = [];
         foreach ($songIds as $songId) {
-            $song = Song::with('artists')->find($songId);
+            $song = Song::with(['album', 'artists'])->find($songId);
             if ($song) {
-                $this->originalSource[] = [
-                    'id' => $song->id,
-                    'title' => $song->title,
-                    'artist' => $song->artist_display,
-                    'cover' => $song->cover_url,
-                    'duration_formatted' => $song->duration_formatted,
-                ];
+                $this->originalSource[] = $this->formatSongData($song, true);
             }
         }
         
@@ -107,18 +146,12 @@ class Queue extends Component
         // Get songs after the current one for autoplay
         $remainingSongIds = array_slice($songIds, $startIndex + 1);
         
-        // Load songs for source (next nodes)
+        // Load songs for source (next nodes) - include audioUrl for fast playback
         $this->sourceSongs = [];
         foreach ($remainingSongIds as $songId) {
-            $song = Song::with('artists')->find($songId);
+            $song = Song::with(['album', 'artists'])->find($songId);
             if ($song) {
-                $this->sourceSongs[] = [
-                    'id' => $song->id,
-                    'title' => $song->title,
-                    'artist' => $song->artist_display,
-                    'cover' => $song->cover_url,
-                    'duration_formatted' => $song->duration_formatted,
-                ];
+                $this->sourceSongs[] = $this->formatSongData($song, true);
             }
         }
         
@@ -127,8 +160,16 @@ class Queue extends Component
     }
 
     #[On('play-song')]
-    public function onPlaySong(int $songId)
+    #[On('play-song-data')]
+    public function onPlaySong(?int $songId = null, ?array $songData = null)
     {
+        // Handle both old (songId) and new (songData) events
+        if ($songData) {
+            $songId = $songData['id'];
+        }
+        
+        if (!$songId) return;
+        
         // Add current song to history (prev pointer in doubly linked list)
         if ($this->currentSongId && $this->currentSongId !== $songId) {
             if ($this->currentSong) {
@@ -141,16 +182,23 @@ class Queue extends Component
         
         $this->currentSongId = $songId;
         
-        // Load current song info
-        $song = Song::with('artists')->find($songId);
-        if ($song) {
+        // Use provided data or load from DB
+        if ($songData) {
             $this->currentSong = [
-                'id' => $song->id,
-                'title' => $song->title,
-                'artist' => $song->artist_display,
-                'cover' => $song->cover_url,
-                'duration_formatted' => $song->duration_formatted,
+                'id' => $songData['id'],
+                'title' => $songData['title'],
+                'artist' => $songData['artist'],
+                'cover' => $songData['cover'],
+                'audioUrl' => $songData['audioUrl'] ?? null,
+                'duration' => $songData['duration'] ?? null,
+                'duration_formatted' => isset($songData['duration']) ? gmdate('i:s', $songData['duration']) : '',
             ];
+        } else {
+            // Fallback: load from DB
+            $song = Song::with(['album', 'artists'])->find($songId);
+            if ($song) {
+                $this->currentSong = $this->formatSongData($song, true);
+            }
         }
         
         // Remove from source songs if it exists there (advance pointer)
@@ -162,7 +210,7 @@ class Queue extends Component
         if (!isset($this->queue[$index])) return;
 
         $song = $this->queue[$index];
-        $this->dispatch('play-song', songId: $song['id']);
+        $this->dispatchPlaySong($song);
         
         // Remove from queue
         array_splice($this->queue, $index, 1);
@@ -173,7 +221,7 @@ class Queue extends Component
         if (!isset($this->sourceSongs[$index])) return;
 
         $song = $this->sourceSongs[$index];
-        $this->dispatch('play-song', songId: $song['id']);
+        $this->dispatchPlaySong($song);
         
         // Remove songs before this one from source (they become "skipped")
         $this->sourceSongs = array_slice($this->sourceSongs, $index + 1);
@@ -233,14 +281,14 @@ class Queue extends Component
         // First, check manual queue (priority - these are inserted nodes)
         if (count($this->queue) > 0) {
             $nextSong = array_shift($this->queue);
-            $this->dispatch('play-song', songId: $nextSong['id']);
+            $this->dispatchPlaySong($nextSong);
             return;
         }
         
         // Then, check source songs (autoplay from playlist - natural next nodes)
         if (count($this->sourceSongs) > 0) {
             $nextSong = array_shift($this->sourceSongs);
-            $this->dispatch('play-song', songId: $nextSong['id']);
+            $this->dispatchPlaySong($nextSong);
             return;
         }
         
@@ -253,7 +301,7 @@ class Queue extends Component
             
             // Play the first song
             $nextSong = array_shift($this->sourceSongs);
-            $this->dispatch('play-song', songId: $nextSong['id']);
+            $this->dispatchPlaySong($nextSong);
             return;
         }
         
@@ -281,7 +329,7 @@ class Queue extends Component
             $this->currentSongId = $prevSong['id'];
             $this->currentSong = $prevSong;
             
-            $this->dispatch('play-previous-song', songId: $prevSong['id']);
+            $this->dispatchPlaySong($prevSong);
             return;
         }
         
@@ -302,7 +350,7 @@ class Queue extends Component
             $this->currentSongId = $lastSong['id'];
             $this->currentSong = $lastSong;
             
-            $this->dispatch('play-previous-song', songId: $lastSong['id']);
+            $this->dispatchPlaySong($lastSong);
             return;
         }
     }

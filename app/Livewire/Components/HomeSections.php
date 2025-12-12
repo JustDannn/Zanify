@@ -200,21 +200,36 @@ class HomeSections extends Component
      */
     public function playStation(int $artistId, array $artistIds = [])
     {
-        // Get songs from these artists
-        $songs = Song::whereHas('artists', fn($q) => $q->whereIn('artists.id', $artistIds))
+        // Get songs from these artists with all needed data
+        $songs = Song::with(['album', 'artists'])
+            ->whereHas('artists', fn($q) => $q->whereIn('artists.id', $artistIds))
             ->inRandomOrder()
             ->take(50)
-            ->pluck('id')
-            ->toArray();
+            ->get();
 
-        if (!empty($songs)) {
+        if ($songs->isNotEmpty()) {
             $artist = Artist::find($artistId);
+            $songIds = $songs->pluck('id')->toArray();
+            $firstSong = $songs->first();
+            
+            // Set play source with all song IDs
             $this->dispatch('set-play-source', 
                 sourceName: ($artist->name ?? 'Artist') . ' Radio', 
-                songIds: $songs, 
-                startFromSongId: $songs[0]
+                songIds: $songIds, 
+                startFromSongId: $firstSong->id
             );
-            $this->dispatch('play-song', songId: $songs[0]);
+            
+            // Send full song data to avoid DB query in Player
+            $isLiked = Auth::check() ? Auth::user()->hasLiked($firstSong) : false;
+            $this->dispatch('play-song-data', songData: [
+                'id' => $firstSong->id,
+                'title' => $firstSong->title,
+                'artist' => $firstSong->artist_display,
+                'cover' => $firstSong->cover_url,
+                'audioUrl' => $firstSong->audio_url,
+                'duration' => $firstSong->duration,
+                'isLiked' => $isLiked,
+            ]);
         }
     }
 
@@ -223,6 +238,10 @@ class HomeSections extends Component
      */
     public function playSong(int $songId, array $sectionSongIds = [])
     {
+        $song = Song::with(['album', 'artists'])->find($songId);
+        
+        if (!$song) return;
+        
         if (!empty($sectionSongIds)) {
             $this->dispatch('set-play-source', 
                 sourceName: 'Home', 
@@ -230,7 +249,18 @@ class HomeSections extends Component
                 startFromSongId: $songId
             );
         }
-        $this->dispatch('play-song', songId: $songId);
+        
+        // Send full song data to avoid DB query in Player
+        $isLiked = Auth::check() ? Auth::user()->hasLiked($song) : false;
+        $this->dispatch('play-song-data', songData: [
+            'id' => $song->id,
+            'title' => $song->title,
+            'artist' => $song->artist_display,
+            'cover' => $song->cover_url,
+            'audioUrl' => $song->audio_url,
+            'duration' => $song->duration,
+            'isLiked' => $isLiked,
+        ]);
     }
 
     /**
@@ -238,16 +268,29 @@ class HomeSections extends Component
      */
     public function playAlbum(int $albumId)
     {
-        $album = Album::with('songs')->find($albumId);
+        $album = Album::with(['songs.artists'])->find($albumId);
         
         if ($album && $album->songs->isNotEmpty()) {
             $songIds = $album->songs->pluck('id')->toArray();
+            $firstSong = $album->songs->first();
+            
             $this->dispatch('set-play-source', 
                 sourceName: $album->title, 
                 songIds: $songIds, 
-                startFromSongId: $songIds[0]
+                startFromSongId: $firstSong->id
             );
-            $this->dispatch('play-song', songId: $songIds[0]);
+            
+            // Send full song data to avoid DB query in Player
+            $isLiked = Auth::check() ? Auth::user()->hasLiked($firstSong) : false;
+            $this->dispatch('play-song-data', songData: [
+                'id' => $firstSong->id,
+                'title' => $firstSong->title,
+                'artist' => $firstSong->artist_display,
+                'cover' => $firstSong->cover_url ?? $album->cover_url,
+                'audioUrl' => $firstSong->audio_url,
+                'duration' => $firstSong->duration,
+                'isLiked' => $isLiked,
+            ]);
         }
     }
 

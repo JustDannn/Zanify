@@ -55,13 +55,27 @@ class ArtistDetail extends Component
      */
     public function playSong(int $songId)
     {
+        $song = $this->popularSongs->firstWhere('id', $songId);
+        if (!$song) return;
+        
         $songIds = $this->popularSongs->pluck('id')->toArray();
         $this->dispatch('set-play-source', 
             sourceName: $this->artist->name, 
             songIds: $songIds, 
             startFromSongId: $songId
         );
-        $this->dispatch('play-song', songId: $songId);
+        
+        // Send full song data to avoid DB query in Player
+        $isLiked = Auth::check() ? Auth::user()->hasLiked($song) : false;
+        $this->dispatch('play-song-data', songData: [
+            'id' => $song->id,
+            'title' => $song->title,
+            'artist' => $song->artist_display,
+            'cover' => $song->cover_url,
+            'audioUrl' => $song->audio_url,
+            'duration' => $song->duration,
+            'isLiked' => $isLiked,
+        ]);
     }
 
     /**
