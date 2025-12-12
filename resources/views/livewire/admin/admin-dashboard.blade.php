@@ -48,7 +48,7 @@
 
                     <!-- Modal using Teleport to body -->
                     <template x-teleport="body">
-                        <div x-show="openEditSongs" x-cloak class="fixed inset-0 z-[100]">
+                        <div x-show="openEditSongs" x-cloak class="fixed inset-0 z-100">
                             <!-- Modal Overlay -->
                             <div x-show="openEditSongs" x-transition.opacity @click="openEditSongs = false"
                                 class="fixed inset-0 bg-black/70"></div>
@@ -208,7 +208,7 @@
 
     {{-- ==================== EDIT SONG MODAL ==================== --}}
     @if($showEditModal)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-black/70" wire:click="closeEditModal"></div>
 
@@ -220,7 +220,7 @@
                 <form wire:submit.prevent="updateSong">
                     <div class="flex gap-6">
                         {{-- Cover Upload --}}
-                        <div class="flex-shrink-0">
+                        <div class="shrink-0">
                             <label class="block text-gray-400 text-sm mb-2">Cover Image</label>
                             <div
                                 class="w-32 h-32 bg-gray-800 rounded-xl flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer">
@@ -420,7 +420,7 @@
 
     {{-- ==================== DELETE CONFIRMATION MODAL ==================== --}}
     @if($showDeleteModal)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-black/70" wire:click="closeDeleteModal"></div>
 
@@ -465,7 +465,7 @@
         x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="opacity-100 transform translate-y-0"
         x-transition:leave-end="opacity-0 transform -translate-y-4"
-        class="fixed top-6 right-6 z-[200] bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg">
+        class="fixed top-6 right-6 z-200 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg">
         {{ session('success') }}
     </div>
     @endif
@@ -475,7 +475,7 @@
         x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="opacity-100 transform translate-y-0"
         x-transition:leave-end="opacity-0 transform -translate-y-4"
-        class="fixed top-6 right-6 z-[200] bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg">
+        class="fixed top-6 right-6 z-200 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg">
         {{ session('error') }}
     </div>
     @endif

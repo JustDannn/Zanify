@@ -1,6 +1,5 @@
 {
-    "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/blank-livewire-starter-kit",
+    "name": "justdann/zanify",
     "type": "project",
     "description": "The official Laravel starter kit for Livewire.",
     "keywords": [

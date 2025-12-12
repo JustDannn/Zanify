@@ -142,9 +142,9 @@
             <div x-show="expanded" x-collapse class="p-4">
                 <div class="flex gap-6">
                     {{-- Cover Upload --}}
-                    <div class="flex-shrink-0">
+                    <div class="shrink-0">
                         <div
-                            class="w-32 h-32 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer">
+                            class="w-32 h-32 bg-linear-to-br from-cyan-400 to-blue-500 rounded-xl flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer">
                             @if(isset($coverFiles[$index]) && $coverFiles[$index])
                             <img src="{{ $coverFiles[$index]->temporaryUrl() }}"
                                 class="absolute inset-0 w-full h-full object-cover">

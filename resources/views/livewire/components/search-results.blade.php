@@ -1,7 +1,7 @@
 <div x-data x-init="$nextTick(() => $dispatch('search-active', { active: {{ $isSearching ? 'true' : 'false' }} }))"
     x-effect="$dispatch('search-active', { active: {{ $isSearching ? 'true' : 'false' }} }}" class="min-h-full">
     @if($isSearching)
-    <div class="p-6 bg-gradient-to-b from-[#1a1a1a] to-[#121212] min-h-full">
+    <div class="p-6 bg-linear-to-b from-[#1a1a1a] to-[#121212] min-h-full">
         {{-- Search Results Header --}}
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-white">Search results for "{{ $query }}"</h1>

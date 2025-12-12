@@ -21,7 +21,7 @@ $mixNumber = $cardData['mix_number'] ?? 'N/A';
         </div>
 
         {{-- Daily Mix Label --}}
-        <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent z-10">
+        <div class="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent z-10">
             <span class="text-white font-extrabold text-sm">Daily Mix</span>
         </div>
 

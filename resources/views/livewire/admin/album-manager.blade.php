@@ -75,7 +75,7 @@
 
     {{-- ==================== CREATE ALBUM MODAL ==================== --}}
     @if($showCreateModal)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-black/70" wire:click="closeCreateModal"></div>
 
@@ -96,7 +96,7 @@
                 <form wire:submit.prevent="createAlbum">
                     <div class="flex gap-6">
                         {{-- Cover Upload --}}
-                        <div class="flex-shrink-0">
+                        <div class="shrink-0">
                             <label class="block text-gray-400 text-sm mb-2">Album Cover</label>
                             <div
                                 class="w-40 h-40 bg-gray-800 rounded-xl flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer border-2 border-dashed border-gray-600 hover:border-green-500/50 transition-colors">
@@ -294,7 +294,7 @@
 
     {{-- ==================== EDIT ALBUM MODAL ==================== --}}
     @if($showEditModal && $editingAlbum)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-black/70" wire:click="closeEditModal"></div>
 
@@ -308,7 +308,7 @@
                 <form wire:submit.prevent="updateAlbum">
                     <div class="flex gap-6">
                         {{-- Cover Upload --}}
-                        <div class="flex-shrink-0">
+                        <div class="shrink-0">
                             <label class="block text-gray-400 text-sm mb-2">Album Cover</label>
                             <div
                                 class="w-40 h-40 bg-gray-800 rounded-xl flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer">
@@ -497,7 +497,7 @@
 
     {{-- ==================== DELETE CONFIRMATION MODAL ==================== --}}
     @if($showDeleteModal)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         {{-- Overlay --}}
         <div class="fixed inset-0 bg-black/70" wire:click="closeDeleteModal"></div>
 

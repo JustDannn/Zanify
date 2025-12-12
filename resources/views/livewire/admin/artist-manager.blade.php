@@ -80,7 +80,7 @@
 
     {{-- ==================== CREATE MODAL ==================== --}}
     @if($showCreateModal)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         <div class="fixed inset-0 bg-black/70" wire:click="closeCreateModal"></div>
 
         <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
@@ -162,7 +162,7 @@
 
     {{-- ==================== EDIT MODAL ==================== --}}
     @if($showEditModal && $editingArtist)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         <div class="fixed inset-0 bg-black/70" wire:click="closeEditModal"></div>
 
         <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
@@ -234,7 +234,7 @@
 
     {{-- ==================== DELETE MODAL ==================== --}}
     @if($showDeleteModal)
-    <div class="fixed inset-0 z-[100]">
+    <div class="fixed inset-0 z-100">
         <div class="fixed inset-0 bg-black/70" wire:click="closeDeleteModal"></div>
 
         <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
