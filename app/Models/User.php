@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
+    use HasFactory, Notifiable;
     protected $fillable = [
         'name',
         'email',
