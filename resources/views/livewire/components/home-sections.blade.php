@@ -22,9 +22,9 @@
             @endphp
 
             @if($linkUrl)
-            <a href="{{ $linkUrl }}" class="flex-shrink-0 w-[180px] group cursor-pointer no-underline">
+            <a href="{{ $linkUrl }}" class="shrink-0 w-[180px] group cursor-pointer no-underline">
                 @else
-                <div class="flex-shrink-0 w-[180px] group cursor-pointer" @if($isClickableSong)
+                <div class="shrink-0 w-[180px] group cursor-pointer" @if($isClickableSong)
                     wire:click="playSong({{ $item['id'] }}, {{ json_encode(collect($section['items'])->where('type', 'song')->pluck('id')->toArray()) }})"
                     @endif>
                     @endif

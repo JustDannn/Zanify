@@ -1,10 +1,10 @@
-<div class="min-h-screen bg-gradient-to-b from-[#1a1a2e] to-[#121212]">
+<div class="min-h-screen bg-linear-to-b from-[#1a1a2e] to-[#121212]">
     {{-- Header --}}
     <div class="px-6 pt-16 pb-8">
         <div class="flex items-end gap-6">
             {{-- History Icon --}}
             <div
-                class="w-56 h-56 bg-gradient-to-br from-[#2d6a4f] to-[#40916c] rounded-lg shadow-2xl flex items-center justify-center">
+                class="w-56 h-56 bg-linear-to-br from-[#2d6a4f] to-[#40916c] rounded-lg shadow-2xl flex items-center justify-center">
                 <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

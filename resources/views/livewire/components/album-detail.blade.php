@@ -1,10 +1,10 @@
-<div class="min-h-screen bg-gradient-to-b from-[#3d3d3d] to-[#121212]">
+<div class="min-h-screen bg-linear-to-b from-[#3d3d3d] to-[#121212]">
     @if($album)
     {{-- Header --}}
     <div class="px-6 pt-16 pb-8">
         <div class="flex items-end gap-6">
             {{-- Album Cover --}}
-            <div class="w-56 h-56 rounded-lg shadow-2xl overflow-hidden flex-shrink-0">
+            <div class="w-56 h-56 rounded-lg shadow-2xl overflow-hidden shrink-0">
                 <img src="{{ $album->cover_url }}" alt="{{ $album->title }}" class="w-full h-full object-cover">
             </div>
 

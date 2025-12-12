@@ -3,7 +3,7 @@
     {{-- Header with Artist Photo --}}
     <div class="relative min-h-[350px]">
         {{-- Background Gradient - Seamless --}}
-        <div class="absolute inset-0 bg-gradient-to-b from-[#4a4a4a] via-[#2d2d2d] via-[60%] to-[#121212]"></div>
+        <div class="absolute inset-0 bg-linear-to-b from-[#4a4a4a] via-[#2d2d2d] via-60% to-[#121212]"></div>
 
         {{-- Content --}}
         <div class="relative px-6 pt-20 pb-6">
@@ -32,7 +32,7 @@
     </div>
 
     {{-- Actions Bar - Always show --}}
-    <div class="px-6 py-4 flex items-center gap-6 bg-gradient-to-b from-[#121212]/0 to-[#121212]">
+    <div class="px-6 py-4 flex items-center gap-6 bg-linear-to-b from-[#121212]/0 to-[#121212]">
         {{-- Play Button --}}
         <button wire:click="playArtist"
             class="w-14 h-14 bg-green-500 hover:bg-green-400 hover:scale-105 rounded-full flex items-center justify-center transition-all shadow-xl">
@@ -126,7 +126,7 @@
         <div class="flex space-x-4 pb-4 overflow-x-auto scrollbar-hide">
             @foreach($albums as $album)
             <a href="{{ route('album', $album->id) }}" wire:navigate
-                class="flex-shrink-0 w-[180px] group cursor-pointer p-4 bg-white/5 hover:bg-white/10 rounded-lg transition">
+                class="shrink-0 w-[180px] group cursor-pointer p-4 bg-white/5 hover:bg-white/10 rounded-lg transition">
                 {{-- Album Cover --}}
                 <div class="relative mb-3">
                     <div class="rounded-lg overflow-hidden aspect-square bg-[#282828] shadow-lg">
