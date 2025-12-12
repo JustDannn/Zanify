@@ -1,5 +1,5 @@
 <?php
-
+use App\Models\User;
 test('returns a successful response', function () {
     // 1. Buat user palsu (menggunakan factory)
     $user = User::factory()->create();
