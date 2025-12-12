@@ -6,9 +6,12 @@ use App\Models\Song;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
+use App\Livewire\Traits\WithPlaylistActions;
 
 class LikedSongs extends Component
 {
+    use WithPlaylistActions;
+
     public $songs = [];
 
     public function mount()

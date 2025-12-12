@@ -116,6 +116,8 @@
                                 d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
                         </svg>
                     </button>
+                    {{-- Add to Playlist --}}
+                    @include('livewire.partials.playlist-menu', ['songId' => $song['id']])
                     <span class="text-gray-400 text-sm">{{ $song['duration_formatted'] }}</span>
                 </div>
             </div>
@@ -133,7 +135,7 @@
             </div>
             <h3 class="text-2xl font-bold text-white mb-2">Belum ada history</h3>
             <p class="text-gray-400 mb-6">Mulai dengarkan lagu untuk melihat history kamu di sini!</p>
-            <a href="{{ route('home') }}"
+            <a href="{{ route('home') }}" wire:navigate
                 class="px-6 py-3 bg-white text-black font-semibold rounded-full hover:scale-105 transition">
                 Cari Lagu
             </a>

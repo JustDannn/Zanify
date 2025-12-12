@@ -56,10 +56,14 @@
     </div>
 
     {{-- Music Player Bar --}}
+    @persist('player')
     @livewire('components.player')
+    @endpersist
 
     {{-- Queue Sidebar --}}
+    @persist('queue')
     @livewire('components.queue')
+    @endpersist
 
     @livewireScripts
 </body>

@@ -6,7 +6,7 @@
         <div class="flex items-center gap-3 flex-1">
 
             {{-- Icon Home --}}
-            <a href="{{ route('home') }}" class="p-2 rounded-full hover:bg-gray-800 transition">
+            <a href="{{ route('home') }}" wire:navigate class="p-2 rounded-full hover:bg-gray-800 transition">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -58,7 +58,7 @@
             </div>
 
             {{-- Icon Recent - Link to History Page --}}
-            <a href="{{ route('recently-played') }}" class="p-2 rounded-full hover:bg-gray-800 transition"
+            <a href="{{ route('recently-played') }}" wire:navigate class="p-2 rounded-full hover:bg-gray-800 transition"
                 title="Recently Played">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-300" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
@@ -97,7 +97,7 @@
                     <a class="block px-4 py-2 hover:bg-gray-800 transition">Profile</a>
                     <a class="block px-4 py-2 hover:bg-gray-800 transition">Settings</a>
                     @if(session('is_admin'))
-                    <a href="{{ route('admin.admin-dashboard') }}" class="block px-4 py-2 hover:bg-gray-800 transition">
+                    <a href="{{ route('admin.admin-dashboard') }}" wire:navigate class="block px-4 py-2 hover:bg-gray-800 transition">
                         Admin Dashboard
                     </a>
                     @endif

@@ -7,9 +7,12 @@ use App\Models\Song;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
+use App\Livewire\Traits\WithPlaylistActions;
 
 class AlbumDetail extends Component
 {
+    use WithPlaylistActions;
+
     public ?Album $album = null;
     public $songs = [];
     public int $totalDuration = 0;

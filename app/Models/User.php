@@ -94,4 +94,12 @@ class User extends Authenticatable
             ->where('played_at', '<', now()->subDays(7))
             ->delete();
     }
+
+    /**
+     * Get user's playlists
+     */
+    public function playlists()
+    {
+        return $this->hasMany(Playlist::class)->orderBy('created_at', 'desc');
+    }
 }

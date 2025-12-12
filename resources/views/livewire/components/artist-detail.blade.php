@@ -92,6 +92,9 @@
                     {{-- Duration --}}
                     <span class="text-gray-400 text-sm w-12 text-right">{{ $song->duration_formatted }}</span>
 
+                    {{-- Add to Playlist --}}
+                    @include('livewire.partials.playlist-menu', ['songId' => $song->id])
+
                     {{-- Add to Queue --}}
                     <button wire:click.stop="addToQueue({{ $song->id }})"
                         class="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition"
@@ -122,7 +125,7 @@
 
         <div class="flex space-x-4 pb-4 overflow-x-auto scrollbar-hide">
             @foreach($albums as $album)
-            <a href="{{ route('album', $album->id) }}"
+            <a href="{{ route('album', $album->id) }}" wire:navigate
                 class="flex-shrink-0 w-[180px] group cursor-pointer p-4 bg-white/5 hover:bg-white/10 rounded-lg transition">
                 {{-- Album Cover --}}
                 <div class="relative mb-3">
@@ -180,7 +183,7 @@
     <div class="flex items-center justify-center min-h-screen">
         <div class="text-center">
             <h2 class="text-white text-2xl font-bold mb-2">Artist not found</h2>
-            <a href="{{ route('home') }}" class="text-green-500 hover:underline">Go back home</a>
+            <a href="{{ route('home') }}" wire:navigate class="text-green-500 hover:underline">Go back home</a>
         </div>
     </div>
     @endif

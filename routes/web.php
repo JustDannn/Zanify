@@ -8,6 +8,7 @@ use App\Livewire\Components\LikedSongs;
 use App\Livewire\Components\RecentlyPlayed;
 use App\Livewire\Components\AlbumDetail;
 use App\Livewire\Components\ArtistDetail;
+use App\Livewire\Components\PlaylistDetail;
 
 Route::get('/', function () {
     if (!Auth::check() && !session('is_admin')) {
@@ -21,6 +22,7 @@ Route::get('/liked-songs', LikedSongs::class)->name('liked-songs');
 Route::get('/recently-played', RecentlyPlayed::class)->name('recently-played');
 Route::get('/album/{id}', AlbumDetail::class)->name('album');
 Route::get('/artist/{id}', ArtistDetail::class)->name('artist');
+Route::get('/playlist/{id}', PlaylistDetail::class)->name('playlist.show');
 Route::middleware(['admin'])->group(function () {
     Route::get('/admin/dashboard', AdminDashboard::class)
         ->name('admin.admin-dashboard');

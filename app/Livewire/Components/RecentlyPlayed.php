@@ -7,9 +7,12 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use App\Livewire\Traits\WithPlaylistActions;
 
 class RecentlyPlayed extends Component
 {
+    use WithPlaylistActions;
+
     public $groupedSongs = [];
     public $totalCount = 0;
 

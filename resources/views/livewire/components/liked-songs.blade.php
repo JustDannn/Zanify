@@ -84,7 +84,7 @@
                 {{ $song->album?->title ?? 'Single' }}
             </div>
 
-            {{-- Like Button, Queue & Duration --}}
+            {{-- Like Button, Queue, Playlist & Duration --}}
             <div class="flex items-center justify-end gap-3">
                 {{-- Add to Queue --}}
                 <button wire:click.stop="addToQueue({{ $song->id }})"
@@ -95,6 +95,8 @@
                             d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
                     </svg>
                 </button>
+                {{-- Add to Playlist --}}
+                @include('livewire.partials.playlist-menu', ['songId' => $song->id])
                 {{-- Unlike --}}
                 <button wire:click.stop="toggleLike({{ $song->id }})" class="text-green-500 hover:scale-110 transition">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
