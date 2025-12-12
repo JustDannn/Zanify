@@ -1,5 +1,7 @@
 <?php
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
 test('returns a successful response', function () {
     // 1. Buat user palsu (menggunakan factory)
     $user = User::factory()->create();
