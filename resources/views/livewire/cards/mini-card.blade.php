@@ -13,9 +13,9 @@ $cardId = $cardData['id'] ?? null;
 @endphp
 
 @if($isLikedSongs)
-<a href="{{ route('liked-songs') }}" @elseif($isRecentlyPlayed) <a href="{{ route('recently-played') }}"
-    @elseif($isAlbum && $cardId) <a href="{{ route('album', $cardId) }}" @elseif($isArtist && $cardId) <a
-    href="{{ route('artist', $cardId) }}" @else <div @endif
+<a href="{{ route('liked-songs') }}" wire:navigate @elseif($isRecentlyPlayed) <a href="{{ route('recently-played') }}" wire:navigate
+    @elseif($isAlbum && $cardId) <a href="{{ route('album', $cardId) }}" wire:navigate @elseif($isArtist && $cardId) <a
+    href="{{ route('artist', $cardId) }}" wire:navigate @else <div @endif
     class="text-amber-50 bg-white/5 hover:bg-amber-50/35 bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-10 rounded-lg shadow-lg flex items-center p-0 overflow-hidden relative transition duration-300 ease-in-out cursor-pointer group">
 
     {{-- Image/Icon Section --}}

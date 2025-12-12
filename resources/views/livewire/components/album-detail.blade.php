@@ -14,7 +14,7 @@
                 <h1 class="text-5xl md:text-7xl font-black text-white mt-2 mb-4 line-clamp-2">{{ $album->title }}</h1>
                 <div class="flex items-center gap-2 text-white/70">
                     @if($album->artist)
-                    <a href="{{ route('artist', $album->artist->id) }}"
+                    <a href="{{ route('artist', $album->artist->id) }}" wire:navigate
                         class="font-semibold text-white hover:underline">
                         {{ $album->artist->name }}
                     </a>
@@ -111,6 +111,9 @@
                     </svg>
                 </button>
 
+                {{-- Add to Playlist --}}
+                @include('livewire.partials.playlist-menu', ['songId' => $song->id])
+
                 {{-- Like --}}
                 <button wire:click.stop="toggleLike({{ $song->id }})"
                     class="{{ $this->isLiked($song->id) ? 'text-green-500' : 'text-gray-400 opacity-0 group-hover:opacity-100' }} hover:scale-110 transition">
@@ -143,7 +146,7 @@
     <div class="flex items-center justify-center min-h-screen">
         <div class="text-center">
             <h2 class="text-white text-2xl font-bold mb-2">Album not found</h2>
-            <a href="{{ route('home') }}" class="text-green-500 hover:underline">Go back home</a>
+            <a href="{{ route('home') }}" wire:navigate class="text-green-500 hover:underline">Go back home</a>
         </div>
     </div>
     @endif

@@ -7,9 +7,12 @@ use App\Models\Song;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Illuminate\Support\Facades\Auth;
+use App\Livewire\Traits\WithPlaylistActions;
 
 class ArtistDetail extends Component
 {
+    use WithPlaylistActions;
+
     public ?Artist $artist = null;
     public $popularSongs = [];
     public $albums = [];
