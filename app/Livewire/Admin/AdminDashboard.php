@@ -7,12 +7,14 @@ use App\Models\Artist;
 use App\Models\Album;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class AdminDashboard extends Component
 {
     use WithFileUploads;
+    use WithPagination;
 
     // Edit Modal
     public $showEditModal = false;
@@ -353,7 +355,7 @@ class AdminDashboard extends Component
     public function render()
     {
         return view('livewire.admin.admin-dashboard', [
-            'songs' => Song::with(['artists', 'album'])->latest()->get(),
+            'songs' => Song::with(['artists', 'album'])->latest()->paginate(20),
             'albums' => Album::orderBy('title')->get(),
         ]);
     }

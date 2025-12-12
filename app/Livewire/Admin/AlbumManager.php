@@ -7,12 +7,14 @@ use App\Models\Artist;
 use App\Models\Song;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class AlbumManager extends Component
 {
     use WithFileUploads;
+    use WithPagination;
 
     // Create Album Modal
     public $showCreateModal = false;
@@ -502,7 +504,7 @@ class AlbumManager extends Component
     public function render()
     {
         return view('livewire.admin.album-manager', [
-            'albums' => Album::with(['artist', 'songs'])->latest()->get(),
+            'albums' => Album::with(['artist', 'songs'])->latest()->paginate(20),
             'availableSongs' => $this->availableSongs,
             'allSongs' => $this->allSongs,
         ]);

@@ -203,7 +203,7 @@ class ArtistManager extends Component
             ->when($this->search, fn($q) => $q->where('name', 'like', '%' . $this->search . '%'))
             ->withCount(['songs', 'albums'])
             ->orderBy('name')
-            ->paginate(10);
+            ->paginate(20);
 
         return view('livewire.admin.artist-manager', [
             'artists' => $artists,

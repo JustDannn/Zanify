@@ -58,6 +58,40 @@
         @endforeach
     </div>
 
+    {{-- Pagination --}}
+    @if($albums->hasPages())
+    <div class="mt-6 flex items-center justify-between">
+        <div class="text-gray-400 text-sm">
+            Showing {{ $albums->firstItem() }} to {{ $albums->lastItem() }} of {{ $albums->total() }} albums
+        </div>
+        <div class="flex items-center gap-2">
+            @if($albums->onFirstPage())
+            <span class="px-4 py-2 bg-gray-800 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
+            @else
+            <button wire:click="previousPage"
+                class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Previous</button>
+            @endif
+
+            <div class="flex items-center gap-1">
+                @foreach($albums->getUrlRange(max(1, $albums->currentPage() - 2), min($albums->lastPage(),
+                $albums->currentPage() + 2)) as $page => $url)
+                <button wire:click="gotoPage({{ $page }})"
+                    class="w-10 h-10 rounded-lg transition {{ $page == $albums->currentPage() ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                    {{ $page }}
+                </button>
+                @endforeach
+            </div>
+
+            @if($albums->hasMorePages())
+            <button wire:click="nextPage"
+                class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Next</button>
+            @else
+            <span class="px-4 py-2 bg-gray-800 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
+            @endif
+        </div>
+    </div>
+    @endif
+
     {{-- Empty State --}}
     @if($albums->isEmpty())
     <div class="text-center py-16">

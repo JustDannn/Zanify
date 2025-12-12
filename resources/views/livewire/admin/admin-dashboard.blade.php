@@ -192,6 +192,43 @@
                     @endforelse
                 </tbody>
             </table>
+
+            {{-- Pagination --}}
+            @if($songs->hasPages())
+            <div class="mt-6 flex items-center justify-between">
+                <div class="text-gray-400 text-sm">
+                    Showing {{ $songs->firstItem() }} to {{ $songs->lastItem() }} of {{ $songs->total() }} songs
+                </div>
+                <div class="flex items-center gap-2">
+                    {{-- Previous --}}
+                    @if($songs->onFirstPage())
+                    <span class="px-4 py-2 bg-gray-800 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
+                    @else
+                    <button wire:click="previousPage"
+                        class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Previous</button>
+                    @endif
+
+                    {{-- Page Numbers --}}
+                    <div class="flex items-center gap-1">
+                        @foreach($songs->getUrlRange(max(1, $songs->currentPage() - 2), min($songs->lastPage(),
+                        $songs->currentPage() + 2)) as $page => $url)
+                        <button wire:click="gotoPage({{ $page }})"
+                            class="w-10 h-10 rounded-lg transition {{ $page == $songs->currentPage() ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600' }}">
+                            {{ $page }}
+                        </button>
+                        @endforeach
+                    </div>
+
+                    {{-- Next --}}
+                    @if($songs->hasMorePages())
+                    <button wire:click="nextPage"
+                        class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Next</button>
+                    @else
+                    <span class="px-4 py-2 bg-gray-800 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
+                    @endif
+                </div>
+            </div>
+            @endif
         </div>
 
         {{-- ALBUMS TAB CONTENT --}}
